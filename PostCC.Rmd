@@ -5,6 +5,20 @@ date: "04/08/2020"
 output: html_document
 ---
 
+#Intro to SALES survey
+
+Q7-Q14	SE (8 questions)
+Q15-Q22	TV (8 questions)
+Q23-Q32	MG (10 questions)
+Notes: Questions 26 and 31 are repeated
+Questions 24 and 29 are repeated
+
+
+```{r}
+
+```
+
+
 To load the library
 ```{r}
 library(tidyverse)

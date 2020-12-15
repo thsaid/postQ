@@ -4,14 +4,26 @@ author: "Tamer Said"
 date: "04/08/2020"
 output: html_document
 ---
+
+#Intro to SALES survey
+
+Q7-Q14	SE (8 questions)
+Q15-Q22	TV (8 questions)
+Q23-Q32	MG (9 questions)
+Notes: Questions 26 and 31 are repeated
+Questions 24 and 29 are repeated
+There is a missing question: It is important to me that I improve my
+science skills.
+
+```{r}
+
+```
+
 I created the variable postQ to save it as a variable (data frame) or tibble
 ```{r}
 postQ <-read.csv("Post Questionnaire.csv")
 ```
-I used the summary function to have a quick look over my data 
-```{r}
-Summary(postQ)
-```
+
 
 i have to load tidyverse package first
 ```{r}
@@ -92,9 +104,9 @@ is.na(SALES_joined)
 ```{r}
 summary(SALES_joined)
 ```
+Renaming the variables in SALES Scores
 
 ```{r}
-SALES_joined %%
-  rename(ID= Q1, Picture= Q2, Color= Q3, Gender= Q4)
+SALES_scores <- rename(SALES_scores, ID= Q1)
 ```
 
