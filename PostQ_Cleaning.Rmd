@@ -1,0 +1,48 @@
+---
+title: "PostQ_Cleaning"
+author: "Tamer Said"
+date: "18/12/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Duplicated values 
+4250
+4268
+4272
+4279
+4281
+4293
+4294
+4310
+4368
+4381
+4408
+4419
+4419
+4538
+4538
+4571
+4571
+4739
+4739
+4755
+4755
+4756
+4756
+4760
+4760
+4765
+4765
+4899
+4899
+4907
+4907
+
+```{r}
+
+```
+
