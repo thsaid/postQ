@@ -5,8 +5,26 @@ date: "18/12/2020"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r}
+postQ <-read.csv("Post Questionnaire.csv")
+library(tidyverse)
+```
+
+Filter postQ to select only SALES and PostCC
+
+```{r}
+postQ <- select(postQ, StartDate ,Q1:SC0)
+```
+
+Deleting first 2 rows containing redundant info
+
+```{r}
+postQ <- postQ[-c(1,2), ]
+```
+
+
+```{r}
+postQ <- rename(postQ, ID=Q1, Picture= Q2, Color= Q3, Gender= Q4, Q07=Q7, Q08 = Q8, Q09 = Q9)
 ```
 
 Duplicated values 
@@ -41,6 +59,33 @@ Duplicated values
 4899
 4907
 4907
+
+#Cleaning duplicates (To search for the row that contains the values) use the following command:
+
+#4250
+```{r}
+which(grepl(4250,postQ$ID))
+```
+Deleting the one in row 37 since it was not completed
+
+```{r}
+postQ <- postQ[-37, ]
+```
+
+#4268
+
+One entry will be changed to 4286 instead, the problem with this, is that it will change both values to the same no. i have to select a condition. 
+
+```{r}
+if (postQ$ID == "4268" && postQ$Picture == "cat")
++ {postQ$ID <- "4286"}
+```
+
+
+
+```{r}
+which (grepl(4268,postQ$Q1))
+```
 
 ```{r}
 
