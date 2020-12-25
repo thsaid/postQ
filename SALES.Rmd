@@ -12,19 +12,11 @@ Q15-Q22	TV (8 questions)
 Q23-Q32	MG (9 questions)
 Notes: Questions 26 and 31 are repeated
 Questions 24 and 29 are repeated
+
 There is a missing question: It is important to me that I improve my
 science skills.
 
-Loading Libraries
-
-```{r}
-install.packages("xlsx")
-install.packages("foreign")
-install.packages("psych")
-install.packages("Hmisc")
-install.packages("Scale")
-```
-Loading #libraries 
+#Loading Libraries
 
 
 ```{r}
@@ -38,36 +30,16 @@ library(effects) # Effects package, needed for the estimated means, includes low
 library(ggpubr)
 options(scipen=99) # This is to indicate how many digits after the decimal, this one is for 2 digits, but can be changed
 ```
-```
 
 I created the variable postQ to save it as a variable (data frame) or tibble.
 ```{r}
-postQ <-read.csv("Post Questionnaire.csv")
+postQ <-read.csv("post_unique.csv")
 ```
 
-I have to load tidyverse package first
-```{r}
-library(tidyverse)
-
-```
-
-To select the coloumns I am interested in, I want to select the variables that have the SALES questions only (from Q7 to Q32)
+To select the columns I am interested in, I want to select the variables that have the SALES questions only (from Q7 to Q32)
 
 ```{r}
-SALES <- select(postQ,Q1:Q4, Q7:Q32)
-```
-To delete the row no. 2 inserted by qualitrics by mistake ( the 2 indicate the row number)
-
-```{r}
-SALES <- SALES[-2, ] 
-SALES <- SALES[-1, ] 
-
-```
-
-I am going to rename the variables instead of having question names
-
-```{r}
-SALES <- rename(SALES, ID = Q1, Picture= Q2, Color= Q3, Gender= Q4)
+SALES <- select(postQ,ID:Gender, Q07:Q32)
 ```
 
 #Scoring of the SALES Questions
@@ -77,8 +49,9 @@ I will use a new code using scale package to see how I could analyze my likert i
 SALES_pr <- PreProc(SALES) # to pre-process my data
 ```
 
-Will have to calculate scores into ways: first one is the long format to do my analysis on the questions, then will do a manual modification in excel to change the words into numbers while 
+Will have to calculate scores into ways: first one is the long format to do my analysis on the questions, then will do a manual modification in excel to change the words into numbers while. The long format does not work well, as each question is repeated 32 times, which bias the score. 
 
+I will not use this option, since it produces many NAs.
 
 ```{r}
 scoring <- read.csv("scoring.csv")
@@ -86,21 +59,17 @@ scoring <- read.csv("scoring.csv")
 
 
 ```{r}
-SALES_long <- pivot_longer(data = SALES,cols =Q7:Q32,names_to = "Question",values_to = "Response"  )
-
+SALES_long <- pivot_longer(data = SALES,cols =Q07:Q32,names_to = "Question",values_to = "Response")
 ```
-Renaming variables in SALES_long
 
-```{r}
-SALES_long <- rename(SALES_long, ID= Q1, Picture= Q2, Color= Q3, Gender= Q4)
-```
 
 Joining the tables together to calculate the scores
 
 ```{r}
-SALES_joined <- inner_join (x = SALES_long,y= scoring, by = "Response")
+SALES_joined <- inner_join (x = SALES_long, y= scoring, by = "Response")
 ```
 
+I am not sure why there are lots of NAs, more than those in the excel sheet (original sheet). could it be the case that not all scores are translated.
 
 Finding score of each participant
  
@@ -109,40 +78,167 @@ SALES_scores <- SALES_joined %>%
              group_by(ID) %>% 
              summarise (SS = sum(Score))
 ```
-I would like to check the structure of my variables
+
+```{r}
+describeBy(SALES, group= "Gender")
+```
+
+Grouping data by question: I now need to group students' responses by question to do my analysis.
+
+```{r}
+SALES_Q <- SALES_joined %>% 
+             group_by(Question) %>% 
+             summarise (SS = sum(Score))
+```
+
+Clearing Response coloumn (6th coloumn)
+
+```{r}
+SALES_joined <-SALES_joined[ ,-6 ]
+```
+
+
+#Converting data from long to wide
+
+Joining the tables by ID (trying to change the tables from long format to wide format)
+Most of the analysis do not work with the long format and the score is skewed when adding them for partipants. Thus, I need to convert the data back to the wide format using spread function from Tidyr.
+
+```{r}
+# The arguments to spread():
+# - data: Data object
+# - key: Name of column containing the new column names
+# - value: Name of column containing values
+
+SALES_wide <- spread(SALES_joined, Question, Score)
+```
+
+
+```{r}
+SALES_response <- inner_join (x = SALES_scores, y= SALES_joined, by = "ID")
+```
+
+
+```{r}
+describe(SALES_scores, SALES_scores$SS)
+```
+
+
+Max. score is 163 and min. is 1. Median is 56.96, median 58
+
+
+#Descriptive stats (SALES)
+
+```{r}
+describeBy (SALES_joined, group = "Question")
+```
+
+```{r}
+describe(SALES)
+```
+It appears that the data is skewed, the median value is 4.0
+
+
+#Graphs
+
+```{r}
+
+```
+
+
+I would like to check the structure of my variables.
 
 ```{r}
 str(SALES_joined)
-
 ```
 
 To check for missing values
 ```{r}
 is.na(SALES_joined)
 ```
-```{r}
-summary(SALES_joined)
-```
-Renaming the variables in SALES Scores
 
 ```{r}
-SALES_scores <- rename(SALES_scores, ID= Q1)
+summary(SALES_joined)
+
 ```
+
+```{r}
+plot <- ggplot() + 
+	geom_bar(data = SALES_joined, aes(x= Gender, y= Question, fill = response), stat="identity") +
+  
+	geom_hline(yintercept = 0, color =c("black")) + 
+	scale_fill_manual(values = SALES_joined$Response, 
+		breaks = c("Strongly Agree", "Agree", "Not Sure", "Disagree", "Strongly Disagree"),
+		labels = c("Strongly Agree", "Agree", "Not Sure", "Disagree", "Strongly Disagree"), +
+	
+	theme_classic ())
+```
+
 
 ```{r}
 write.csv(SALES_scores, "SALES.scores.csv")
 ```
 
-I now need to group students' responses by question to do my analysis.
-```{r}
 
-SALES_Q <- SALES_joined %>% 
-  group_by(Question)
+
+
+
+Checking the stats of the questions
+
+
+```{r}
+describeBy(SALES_Q$SS, group = "Question")
+```
+
+```{r}
+describeBy(SALES_Q, group = "Gender")
+```
+
+```{r}
+describeBy(SALES_Q, group = "ID")
+```
+
+#Boxplots
+
+```{r}
+boxplot(Score~Question, data=SALES_joined, main= "SALES Questions ",
+   xlab="Question ", ylab="Score")
+
+#Note that you put y-axis(score), then x-axis(question)
+```
+probably the numbers are biased, because each question is counted more than once because of the changed data format.
+
+```{r}
+boxplot(Score~Question, data=SALES_Q, main= "SALES Questions ",
+   xlab="Question ", ylab="Score")
 
 ```
-CHECKING the stats of the questions
-```{r}
-describeBy(SALES_Q, group = "Question")
 
+
+Histograms
+
+```{r}
+ggbarplot(SALES_joined, x = "Question", y = "Score",
+          fill = "Score", sort.by.groups = TRUE)
+```
+
+```{r}
+ggbarplot(SALES, x = "Question", y = "Score",
+          fill = "Score", sort.by.groups = TRUE)
+```
+
+#Need to work on this graph after correcting the scores
+
+```{r}
+SALES_hist <- ggplot(SALES_Q, aes(sum)) + 
+geom_histogram(aes(y = ..density..), colour = "black", fill = "white") +
+labs(x = "score", y = "")
+
+SALES_hist + stat_function(fun = dnorm, args = list(mean = mean(SALES_Q$Score,
+na.rm = TRUE), sd = sd(SALES_Q$score, na.rm = TRUE)), colour = "black", size = 1)
+```
+
+
+```{r}
+describeBy(SALES_Q$Score, group = "Question")
 ```
 
