@@ -5,10 +5,13 @@ date: "18/12/2020"
 output: html_document
 ---
 
+<<<<<<< HEAD
 Notes on dates
 
 Ms.Rasha group on 16/5
 
+=======
+>>>>>>> 958f6d4ed7cb8936b003e4e2c5ff5bd49453f436
 ```{r}
 postQ <-read.csv("Post Questionnaire.csv")
 library(tidyverse)
@@ -76,6 +79,7 @@ Deleting the one in row 37 since it was not completed
 postQ <- postQ[-37, ]
 ```
 
+<<<<<<< HEAD
 ```{r}
 write.csv(postQ, 'postQ.csv')
 
@@ -88,11 +92,14 @@ I created unique IDs to identify those students with duplicates
 postQ <- read.csv("postQ_unique.csv")
 ```
 
+=======
+>>>>>>> 958f6d4ed7cb8936b003e4e2c5ff5bd49453f436
 #4268
 
 One entry will be changed to 4286 instead, the problem with this, is that it will change both values to the same no. i have to select a condition. 
 
 ```{r}
+<<<<<<< HEAD
 postQ$ID[postQ$U_ID=="A25"] <- 4286
 
 ```
@@ -127,6 +134,18 @@ postQ$ID[postQ$U_ID=="A22"] <- "4293F"
 
 #4294
 
+=======
+if (postQ$ID == "4268" && postQ$Picture == "cat")
++ {postQ$ID <- "4286"}
+```
+
+
+
+```{r}
+which (grepl(4268,postQ$Q1))
+```
+
+>>>>>>> 958f6d4ed7cb8936b003e4e2c5ff5bd49453f436
 ```{r}
 postQ$ID[postQ$U_ID=="A23"] <- "4294F"
 ```
