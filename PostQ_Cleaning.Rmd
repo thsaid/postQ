@@ -201,6 +201,17 @@ postQ$ID[postQ$U_ID=="A302"] <- "4765F"
 ```{r}
 postQ$ID[postQ$U_ID=="A335"] <- "4799" 
 ```
+#4907
 
+```{r}
+postQ$ID[postQ$U_ID=="A336"] <- "4807" 
+```
+
+
+#Saving the changes to csv file
+
+```{r}
+write.csv(postQ, 'postQ_unique.csv')
+```
 
 
