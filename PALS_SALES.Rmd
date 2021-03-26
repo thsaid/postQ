@@ -1,0 +1,159 @@
+---
+title: "PALS_SALES"
+author: "Tamer Said"
+date: "05/01/2021"
+output: html_document
+---
+#PALS Questions
+
+Summary of the PALS Questions and their factors
+Mastery Goals (MG): PQ01:PQ05
+Performance Approach Goals (PAPG) Q06:Q10
+Performance Avoidance Goals (PAVG) Q11:Q14
+Self-efficacy (SE) PQ15:PQ19
+
+#Intro to SALES survey
+
+Self-efficacy: SQ7-SQ14	SE (8 questions)
+Task Value: Q15-Q22	TV (8 questions)
+Mastery Goals Q23-Q32	MG (8 questions), Question 30 is missing. 
+Notes: Questions 26 and 31 are repeated
+Questions 24 and 29 are repeated
+
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Loading libraries
+
+```{r}
+library(tidyverse)
+```
+
+Loading SALES files
+
+```{r}
+SALES <- read.csv("SALES.csv")
+```
+Renaming th he Questions using S, to avoid confusion with the SALES when merged together
+
+```{r}
+SALES <- rename(SALES, SQ07=Q07, SQ08=Q08, SQ09=Q09, SQ10=Q10, SQ11=Q11, SQ12=Q12, SQ13=Q13, SQ14=Q14, SQ15=Q15, SQ16=Q16, SQ17=Q17, SQ18=Q18, SQ19=Q19, SQ20=Q20, SQ21=Q21, SQ22=Q22, SQ23=Q23, SQ24=Q24, SQ25=Q25, SQ26=Q26, SQ27=Q27, SQ28=Q28, SQ29=Q29, SQ31=Q31, SQ32=Q32)
+```
+
+Loading PALS files
+```{r}
+PALS <- read.csv("PALS.csv")
+PALS <- rename(PALS, PQ01=Q01, PQ02=Q02, PQ03=Q03, PQ04=Q04, PQ05=Q05, PQ06=Q06, PQ07=Q07, PQ08=Q08, PQ09=Q09, PQ10=Q10, PQ11=Q11, PQ12=Q12, PQ13=Q13, PQ14=Q14, PQ15=Q15, PQ16=Q16, PQ17=Q17, PQ18=Q18, PQ19=Q19)
+
+```
+
+Joining the two tables together PALS & SALES
+```{r}
+PALS_SALES <- inner_join(x = PALS, y = SALES, by= "ID")
+
+```
+
+Saving the file
+
+```{r}
+write.csv(PALS_SALES, "PALS_SALES.csv")
+```
+
+Selecting relevant coloumns for the matrix
+
+```{r}
+PALS_SALES_filtered <- select(PALS_SALES, ID, Gender.x, Certificate,PQ01:PQ19, SQ07:SQ32)
+```
+
+
+After joining the two tables the total observations are 359 observations, (that's the total no. of participants who did the pre and post surveys)
+
+#I will start with an EFA to see how these two instruments fit together
+
+```{r}
+#Installing packages and loading libraries
+
+
+library(corpcor); library(GPArotation); library(psych)
+library(boot); library(ggm); library(ggplot2); library(Hmisc);
+library(polycor)
+
+```
+Running correlations for the whole data frame. This command below excludes the missing values and those that are not numeric.
+```{r}
+cor(PALS_SALES_filtered[sapply(PALS_SALES_filtered, is.numeric)], use='pairwise')
+```
+Saving the correlation matrix to data
+
+```{r}
+P_Scorr <- cor(PALS_SALES_filtered[sapply(PALS_SALES_filtered, is.numeric)], use='pairwise')
+```
+
+Running Barlette test on the correlation matrix in prep for FA. The p value shall be less than 0.5.
+A significant test tells us that the R-matrix is not an identity matrix(identity matrix is the case when variables are NOT related to each other and corr is zero); Therefore, if it is significant then it means that the correlations between variables are (overall) significantly different from zero, if Bartlett’s test is significant then it is good news (Field, 2009)
+
+
+```{r}
+cortest.bartlett(P_Scorr, n=359)
+```
+
+Running KMO test for the degree of common variance (ideally, a score of 0.5 or higher is good). values close to 1 indicates that patterns of correlations are relatively compact and so factor analysis should yield distinct and reliable factors.
+
+```{r}
+KMO(P_Scorr)
+```
+The MSA score of 0.91 is a good indicator
+
+#PCA:I have set the factors to 44, which is the number of the items. This is just an exploratory step
+
+```{r}
+pc44 <- principal(P_Scorr, nfactors = 44, rotate = "none")
+pc44
+```
+
+SS loading: refer to sum of squared loadings
+```{r}
+pc44$values
+
+```
+
+This command allows to view the eigenvalues of each factor. 
+
+
+Screeplot to determine the eigenvalues
+
+```{r}
+plot(pc44$values, type = "b")
+```
+#6 facotrs: trying out 6 factors
+
+```{r}
+factors_data_6 <- fa(r = P_Scorr, nfactors = 6)
+factors_data_6
+```
+
+According to the output, only 5 factors had high loadings, factor 6 did not have any high loadings. After the 5th factor, the eigenvalues dropped from 2.75 to 0.8  Accordingly, I will try 5 factors only to see if there is a better outfit.
+#5 factors model
+```{r}
+factors_data_5 <- fa(r = P_Scorr, nfactors = 5)
+factors_data_5
+```
+
+#4 factors model
+
+```{r}
+factors_data_4 <- fa(r = P_Scorr, nfactors = 4)
+factors_data_4
+```
+The scores for the 5 factor model, works better than the 4 factor model.
+
+
+```{r}
+write.table (factors_data_5, "PALS_SALES_factors.csv")
+```
+
