@@ -1,8 +1,10 @@
 ---
-Title: "SALES Questions"
+Title: SALES Questions
 author: "Tamer Said"
 date: "04/08/2020"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 #Intro to SALES survey
@@ -40,10 +42,6 @@ postQ <-read.csv("post_unique.csv")
 
 To select the columns I am interested in, I want to select the variables that have the SALES questions only (from Q7 to Q32)
 
-```{r}
-library(tidyverse)
-```
-
 
 ```{r}
 SALES <- select(postQ,ID:Gender, Q07:Q32)
@@ -53,7 +51,7 @@ Saving SALES files
 
 ```
 
-24/3
+24/3 (full referts to the version that has no missing values)
 
 ```{r}
 SALES <- read.csv("SALES_full.csv")
@@ -175,8 +173,6 @@ Loading ggpubr library for graphs, then creating QQ plot to compare the deviatio
 library(ggpubr)
 ggqqplot(SALES$total)
 ```
-
-
 
 
 
@@ -480,7 +476,7 @@ Q23-Q32	MG (9 questions) #Question 30 is not present in the survey
 Let's start be defining the measurement model
 
 ```{r}
-latents.model <- 'SelfEfficacy =~ Q08 +  Q07 + Q09 + Q10 + Q11 + Q12 + Q13 + Q14
+latents.model_s <- 'SelfEfficacy =~ Q08 +  Q07 + Q09 + Q10 + Q11 + Q12 + Q13 + Q14
 TaskValue =~ Q18 + Q15 + Q16 + Q17 + Q19 + Q20 + Q21 + Q22
 MasteryGoals =~ Q24 + Q23 + Q25 + Q26 + Q27 + Q28 + Q29 + Q31 + Q32'
 ```
@@ -488,8 +484,8 @@ MasteryGoals =~ Q24 + Q23 + Q25 + Q26 + Q27 + Q28 + Q29 + Q31 + Q32'
 Run CFA model
 
 ```{r}
-SALESfit <- cfa(latents.model,data = SALES, ordered= TRUE, estimator = "DWLS") #ordered = true means that the variables are ordered categoricals
-summary (SALESfit, fit.measrues = TRUE) #to view summary of the fit
+SALESfit <- cfa(latents.model_s,data = SALES, ordered= TRUE, estimator = "DWLS") #ordered = true means that the variables are ordered categoricals
+summary (SALESfit, fit.measures = TRUE) #to view summary of the fit
 partable(SALESfit) # to have the summary of parameters converted to a dataframe
 vartable(SALESfit) # to have the summary of variables converted to a dataframe
 parameterestimates(SALESfit) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters.
@@ -531,7 +527,7 @@ Note: the thicker the lines, the higher the loadings.
 #Factor scores (refer to https://rdrr.io/cran/lavaan/man/lavPredict.html)
 
 ```{r}
-fit <- cfa(latents.model, data = SALES, se = "robust", test = "Satorra-Bentler") 
+fit <- cfa(latents.model_s, data = SALES, se = "robust", test = "Satorra-Bentler") 
 head(lavPredict(fit)) #first we need to define the model
 head(lavPredict(fit, type = "ov")) #then we use the lavpredict function to compute estimated values for latent variables.
 idx <- lavInspect(fit, "case.idx") #The lavInspect() functions can be used to inspect/extract information that is stored inside (or can be computed from) a fitted lavaan object. 
@@ -573,6 +569,7 @@ SALESfscore_joined <- inner_join (x = SALES, y= SALESfscores.df, by = "rowno")
 SALESfscore_joined
 
 ```
+
 
 ```{r}
 hist(SALESfscores)

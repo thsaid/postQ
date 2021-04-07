@@ -40,35 +40,122 @@ postQ <-read.csv("post_unique.csv")
 
 To select the columns I am interested in, I want to select the variables that have the SALES questions only (from Q7 to Q32)
 
-Correcting a wrong value in gender (From mint to male), color and picture.
-
 ```{r}
-SALES[SALES$ID==4468, "Gender"] <- "Male"
-SALES[SALES$ID==4468, "Picture"] <- "Buffalo"
-SALES[SALES$ID==4468, "Color"] <- "mint"
-
+library(tidyverse)
 ```
 
 
 ```{r}
 SALES <- select(postQ,ID:Gender, Q07:Q32)
 ```
-
-#Scoring of the SALES Questions
-
-I will use a new code using scale package to see how I could analyze my likert items
+Saving SALES files 
 ```{r}
-SALES_pr <- PreProc(SALES) # to pre-process my data
+
 ```
 
-Will have to calculate scores into ways: first one is the long format to do my analysis on the questions, then will do a manual modification in excel to change the words into numbers while. The long format does not work well, as each question is repeated 32 times, which bias the score. 
-
-I will not use this option, since it produces many NAs.
-
+24/3
 ```{r}
-scoring <- read.csv("scoring.csv")
+SALES <- read.csv("SALES.csv")
 ```
 
+Checking for missing values
+
+```{r}
+summary(SALES)
+```
+
+
+```{r}
+install.packages("mice")
+library(mice)
+```
+
+```{r}
+md.pattern(SALES)
+```
+
+Based on the graph, it appears that 365 cases are complete,while 20 cases are missing one item. 
+
+```{r}
+library(VIM)
+mice_plot <- aggr(SALES, col=c('navyblue','yellow'),
+                    numbers=TRUE, sortVars=TRUE,
+                    labels=names(SALES), cex.axis=.7,
+                    gap=3, ylab=c("Missing data","Pattern"))
+```
+
+```{r}
+imputed_Data <- mice(SALES, m=5, maxit = 5, method = 'pmm', seed = 5) #m  – Refers to 5 imputed data sets (default is 5), maxit –  Refers to no. of iterations taken to impute missing values, deafult is 5. Seed: An integer that is used as argument by the set.seed() for offsetting the random number generator. Default is to leave the random number generator alone. method – Refers to method used in imputation. we used predictive mean matching 'pmm'
+```
+
+checking for the imputed values for Q25
+```{r}
+imputed_Data$imp$Q25 #these command shows the imputed data for Q04 for all the versions (datasets)
+```
+
+
+Choosing dataset no.3
+
+```{r}
+SALES <- complete(imputed_Data,3)
+```
+
+Saving SALES as a full version (or complete) 
+
+```{r}
+write.csv(SALES, "SALES_full.csv")
+```
+
+```{r}
+str(SALES)
+```
+
+```{r}
+summary(SALES)
+```
+
+By comparing the mean of Q25 before and after the imputation, it appears that it has not changed from 4.149(before imputation) to 4.15(after imputation)
+
+
+
+```{r}
+total = rowSums(Filter(is.numeric, SALES))
+```
+
+
+#Calcualting total score for each participant. 
+Now, I will create a sum coloumn for the total of student's responses in the questions
+
+
+```{r}
+library(tidyverse)
+SALES <- cbind(SALES, total = rowSums(Filter(is.numeric, SALES), na.rm = TRUE))
+```
+
+
+```{r}
+describeBy(SALES,"ID")
+```
+
+Checking the score distribution.
+```{r}
+hist(SALES$total)
+```
+```{r}
+describe(SALES)
+```
+
+It appears that the score distribution is not normal, there is a left tail and the score is skewed. Kurtosis is 6.6 and 
+
+Q-plot to compare the distribution of the sample vs. predicted
+
+```{r}
+qqplot.scores <- qplot(sample = SALES$total, stat="qq")
+```
+
+```{r}
+
+```
 
 ```{r}
 SALES_long <- pivot_longer(data = SALES,cols =Q07:Q32,names_to = "Question",values_to = "Response")
@@ -167,7 +254,7 @@ It appears that the data is skewed, the median value is 4.0
 #t-test(To see if there is a diff between males and females)
 
 ```{r}
-SALES_joined[SALES_joined$ID==4468, "Gender"] <- "Male"
+SALES[SALES$ID==4468, "Gender"] <- "Male"
 ```
 
 
