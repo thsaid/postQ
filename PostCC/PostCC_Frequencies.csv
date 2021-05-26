@@ -1,0 +1,87 @@
+"","Level","Group_by","Count","Prop"
+"1","mass X volume","Q08post",16,4.06
+"2","mass/volume","Q08post",336,85.28
+"3","volume/mass","Q08post",38,9.64
+"4",NA,"Q08post",2,0.51
+"5","volume and mass","Q08post",1,0.25
+"6","amount of matter in object per unit volume","Q08post",1,0.25
+"7","Not sure","Q09post",52,13.2
+"8","Agree","Q09post",215,54.57
+"9","Disagree","Q09post",123,31.22
+"10",NA,"Q09post",2,0.51
+"11","mass X volume","Q09post",1,0.25
+"12","mass/volume","Q09post",1,0.25
+"13",NA,"Q10post",60,15.23
+"14","Because density is a property of the matter, and it can change only if we changed the temperature or pressure","Q10post",219,55.58
+"15","Because density is a property of the matter, and it can never change","Q10post",66,16.75
+"16","Because the density can always change even if the pressure or temperature is constant","Q10post",47,11.93
+"17","Not sure","Q10post",2,0.51
+"18","Smaller than","Q11post",117,29.7
+"19","Bigger than","Q11post",52,13.2
+"20","Same as","Q11post",214,54.31
+"21",NA,"Q11post",11,2.79
+"22","it has the same volume as the original block","Q12post",68,17.26
+"23","it has half the volume of the original block","Q12post",278,70.56
+"24","it has twice the volume of the original block","Q12post",36,9.14
+"25",NA,"Q12post",10,2.54
+"26","Same as","Q12post",1,0.25
+"27","Smaller than","Q12post",1,0.25
+"28","Smaller than","Q13post",114,28.93
+"29","Bigger than","Q13post",59,14.97
+"30","Same as","Q13post",210,53.3
+"31",NA,"Q13post",9,2.28
+"32","it has half the volume of the original block","Q13post",2,0.51
+"33","Not sure","Q14post",39,9.9
+"34","Disagree","Q14post",218,55.33
+"35","Agree","Q14post",126,31.98
+"36",NA,"Q14post",9,2.28
+"37","Smaller than","Q14post",1,0.25
+"38","Same as","Q14post",1,0.25
+"39",NA,"Q15post",51,12.94
+"40","Because what determines if an object will sink or float is the weight of the object","Q15post",37,9.39
+"41","Because what determines if an object will sink or float is the volume (how big it is)","Q15post",33,8.38
+"42","Because what determines if an object will sink or float is the density of the object compared to the density of water.","Q15post",271,68.78
+"43","Not sure","Q15post",1,0.25
+"44","Agree","Q15post",1,0.25
+"45","Half the density of 1 kg of wood","Q16post",41,10.41
+"46","Twice the density of 1 kg of wood","Q16post",128,32.49
+"47","The same density as 1 kg of wood","Q16post",212,53.81
+"48",NA,"Q16post",12,3.05
+"49","Because what determines if an object will sink or float is the density of the object compared to the density of water.","Q16post",1,0.25
+"50","it has twice the mass of the original block","Q17post",38,9.64
+"51","it has the same mass as the original block","Q17post",56,14.21
+"52","it has half the mass of the original block","Q17post",287,72.84
+"53",NA,"Q17post",11,2.79
+"54","The same density as 1 kg of wood","Q17post",2,0.51
+"55","it has the same density as the original block","Q18post",229,58.12
+"56","it has half the density of the original block","Q18post",121,30.71
+"57","it has twice the density of the original block","Q18post",31,7.87
+"58",NA,"Q18post",11,2.79
+"59","it has half the mass of the original block","Q18post",2,0.51
+"60","It has half the volume, and half the density of the original block","Q19post",77,19.54
+"61","It has half the volume, but same density of the original block","Q19post",254,64.47
+"62","it has the same volume, but half the density of the original block","Q19post",49,12.44
+"63",NA,"Q19post",12,3.05
+"64","it has twice the density of the original block","Q19post",1,0.25
+"65","it has half the density of the original block","Q19post",1,0.25
+"66","I am Not sure","Q20post",72,18.27
+"67","The blocks will float","Q20post",79,20.05
+"68","The blocks will sink","Q20post",230,58.38
+"69",NA,"Q20post",11,2.79
+"70","It has half the volume, and half the density of the original block","Q20post",1,0.25
+"71","It has half the volume, but same density of the original block","Q20post",1,0.25
+"72","I am Not sure","Q21post",90,22.84
+"73","The 2 blocks will sink","Q21post",71,18.02
+"74","The 2 blocks will float","Q21post",216,54.82
+"75","Q48","Q21post",17,4.31
+"76","Another answer?","Q22post",12,3.05
+"77","Density","Q22post",333,84.52
+"78","Mass only","Q22post",21,5.33
+"79","Volume only","Q22post",15,3.81
+"80",NA,"Q22post",11,2.79
+"81","I am Not sure","Q22post",2,0.51
+"82","Same density","Q24post",81,20.56
+"83","More dense","Q24post",120,30.46
+"84","Less dense","Q24post",180,45.69
+"85",NA,"Q24post",11,2.79
+"86","Density","Q24post",2,0.51

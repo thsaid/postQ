@@ -1,0 +1,45 @@
+Response,value
+mass/volume,1
+volume/mass,0
+mass X volume,0
+Agree,1
+Disagree,0
+Not sure,0.5
+Because the density can always change even if the pressure or temperature is constant,0
+"Because density is a property of the matter, and it can never change",0
+"Because density is a property of the matter, and it can change only if we changed the temperature or pressure",1
+Smaller than,0
+Bigger than,0
+Same as,1
+"	
+it has the same volume as the original block",0
+it has half the volume of the original block,1
+it has twice the volume of the original block,0
+Disagree14,1
+Agree14,0
+Because what determines if an object will sink or float is the volume (how big it is),0
+Because what determines if an object will sink or float is the density of the object compared to the density of water.,1
+Because what determines if an object will sink or float is the weight of the object,0
+Half the density of 1 kg of wood,0
+Twice the density of 1 kg of wood,0
+The same density as 1 kg of wood,1
+it has half the mass of the original block,1
+it has the same mass as the original block,0
+it has twice the mass of the original block,0
+it has half the density of the original block,0
+it has twice the density of the original block,0
+it has the same density as the original block,1
+"It has half the volume, but same density of the original block",1
+"it has the same volume, but half the density of the original block",0
+"It has half the volume, and half the density of the original block",0
+The blocks will float,0
+I am not sure,0.5
+The blocks will sink,1
+The 2 blocks will sink,0
+The 2 blocks will float,1
+Volume only,0
+Mass only,0
+Density,1
+Same density,0
+More dense,0
+Less dense,1

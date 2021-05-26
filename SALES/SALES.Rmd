@@ -1,0 +1,465 @@
+---
+Title: "SALES Questions"
+author: "Tamer Said"
+date: "04/08/2020"
+output: html_document
+---
+
+#Intro to SALES survey
+
+Q7-Q14	SE (8 questions)
+Q15-Q22	TV (8 questions)
+Q23-Q32	MG (8 questions), Question 30 is missing. 
+Notes: Questions 26 and 31 are repeated
+Questions 24 and 29 are repeated
+
+There is a missing question: It is important to me that I improve my
+science skills.
+
+#Loading Libraries
+
+
+```{r}
+library(tidyverse) # For data wrangling
+library(ggplot2) # for graphing / figures - mostly histograms/ppplots here
+library(pastecs) # Needed to run normality tests
+library(car) # Needed to run Levene test
+library(lsr) # Navarro package for running psychology tests
+library(psych) # for key psychology stats
+library(effects) # Effects package, needed for the estimated means, includes lower/upper 95% conf limits
+library(ggpubr)
+library(boot); library(ggm); library(ggplot2); library(Hmisc);
+library(polycor)
+options(scipen=99) # This is to indicate how many digits after the decimal, this one is for 2 digits, but can be changed
+```
+
+I created the variable postQ to save it as a variable (data frame) or tibble.
+```{r}
+postQ <-read.csv("post_unique.csv")
+```
+
+To select the columns I am interested in, I want to select the variables that have the SALES questions only (from Q7 to Q32)
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+SALES <- select(postQ,ID:Gender, Q07:Q32)
+```
+Saving SALES files 
+```{r}
+write.csv(SALES, "SALES.csv")
+```
+
+#Scoring of the SALES Questions
+
+I will use a new code using scale package to see how I could analyze my likert items
+```{r}
+SALES_pr <- PreProc(SALES) # to pre-process my data
+```
+
+Will have to calculate scores into ways: first one is the long format to do my analysis on the questions, then will do a manual modification in excel to change the words into numbers while. The long format does not work well, as each question is repeated 32 times, which bias the score. 
+
+I will not use this option, since it produces many NAs.
+
+```{r}
+scoring <- read.csv("scoring.csv")
+```
+
+
+```{r}
+SALES_long <- pivot_longer(data = SALES,cols =Q07:Q32,names_to = "Question",values_to = "Response")
+```
+
+
+Joining the tables together to calculate the scores
+
+```{r}
+SALES_joined <- inner_join (x = SALES_long, y= scoring, by = "Response")
+```
+
+I am not sure why there are lots of NAs, more than those in the excel sheet (original sheet). could it be the case that not all scores are translated.
+
+Finding score of each participant
+ 
+```{r}
+SALES_scores <- SALES_long %>% 
+             group_by(ID) %>% 
+             summarise (SS = sum(Response,na.rm=TRUE))
+```
+
+```{r}
+describeBy(SALES, group= "Gender")
+```
+
+Grouping data by question: I now need to group students' responses by question to do my analysis.
+
+```{r}
+SALES_Q <- SALES_joined %>% 
+             group_by(Question) %>% 
+             summarise (SS = sum(Score))
+```
+
+Clearing Response coloumn (6th coloumn)
+
+```{r}
+SALES_joined <-SALES_joined[ ,-6 ]
+```
+
+
+#Converting data from long to wide
+
+Joining the tables by ID (trying to change the tables from long format to wide format)
+Most of the analysis do not work with the long format and the score is skewed when adding them for partipants. Thus, I need to convert the data back to the wide format using spread function from Tidyr.
+
+```{r}
+# The arguments to spread():
+# - data: Data object
+# - key: Name of column containing the new column names
+# - value: Name of column containing values
+
+SALES_wide <- spread(SALES_joined, Question, Score)
+```
+
+
+```{r}
+SALES_response <- inner_join (x = SALES_scores, y= SALES_joined, by = "ID")
+```
+
+
+```{r}
+describe(SALES_scores, SALES_scores$SS)
+```
+
+
+Max. score is 163 and min. is 1. Median is 56.96, median 58
+
+
+#Descriptive stats
+
+```{r}
+describeBy (SALES_joined, group = "Question")
+```
+
+
+```{r}
+describeBy(SALES_Q$SS, group = "Question")
+```
+
+```{r}
+describeBy(SALES_Q, group = "Gender")
+```
+
+```{r}
+describeBy(SALES_Q, group = "ID")
+```
+
+
+```{r}
+describe(SALES)
+summary(SALES)
+```
+It appears that the data is skewed, the median value is 4.0
+
+#t-test(To see if there is a diff between males and females)
+
+```{r}
+SALES_joined[SALES_joined$ID==4468, "Gender"] <- "Male"
+```
+
+
+```{r}
+# independent 2-group t-test
+# t.test(y~x).. where y is numeric and x is a binary factor
+
+t.test(SALES_joined$Score ~ SALES_joined$Gender)
+```
+
+It appears that there is a significance diff. between the groups. 
+
+#Graphs
+
+```{r}
+hist(SALES)
+```
+Frequency of scores
+
+```{r}
+hist(SALES_scores$SS)
+describe(SALES_scores$SS)
+```
+
+
+It appears that there is a left skew in my data, very few people scored more than 100, while the mean value is 57. The max. possible score is 125.
+
+I would like to check the structure of my variables.
+
+```{r}
+str(SALES_joined)
+```
+
+To check for missing values
+```{r}
+is.na(SALES_joined)
+```
+
+```{r}
+summary(SALES_joined)
+
+```
+
+```{r}
+plot <- ggplot() + 
+	geom_bar(data = SALES_joined, aes(x= Gender, y= Question, fill = response), stat="identity") +
+  
+	geom_hline(yintercept = 0, color =c("black")) + 
+	scale_fill_manual(values = SALES_joined$Response, 
+		breaks = c("Strongly Agree", "Agree", "Not Sure", "Disagree", "Strongly Disagree"),
+		labels = c("Strongly Agree", "Agree", "Not Sure", "Disagree", "Strongly Disagree"), +
+	
+	theme_classic ())
+```
+The code did not work.
+
+```{r}
+write.csv(SALES_scores, "SALES.scores.csv")
+```
+
+Checking the stats of the questions
+
+
+#Boxplots
+
+```{r}
+boxplot(Score~Question, data=SALES_joined, main= "SALES Questions ",
+   xlab="Question ", ylab="Score")
+
+#Note that you put y-axis(score), then x-axis(question)
+```
+Probably the numbers are biased, because each question is counted more than once because of the changed data format.
+
+```{r}
+boxplot(Score~Question, data=SALES_Q, main= "SALES Questions ",
+   xlab="Question ", ylab="Score")
+
+```
+
+```{r}
+boxplot(Response ~ Gender, SALES_long)
+
+```
+
+#Histograms
+
+```{r}
+hist_score <- hist(SALES_joined$Score)
+```
+
+
+```{r}
+ggbarplot(SALES_joined, x = "Question", y = "Score",
+          fill = "Score", sort.by.groups = TRUE)
+```
+
+#Notes on normality, it looks that the scores are not normally distributed.
+
+```{r}
+SALES_hist <- ggplot(SALES_joined, aes(Score)) + 
+geom_histogram(aes(y = ..density..), colour = "black", fill = "white") +
+labs(x = "Question", y = "Score")
+
+SALES_hist + stat_function(fun = dnorm, args = list(mean = mean(SALES_Q$Score,
+na.rm = TRUE), sd = sd(SALES_Q$score, na.rm = TRUE)), colour = "black", size = 1)
+```
+
+
+```{r}
+describeBy(SALES_Q$Score, group = "Question")
+```
+
+#Correlations
+
+Running correlations for the whole data frame. This command below excludes the missing values and those that are not numeric.
+```{r}
+cor(SALES[sapply(SALES, is.numeric)], use='pairwise')
+```
+
+
+Saving the correlation matrix to data
+
+```{r}
+SALEScorr <- cor(SALES[sapply(SALES, is.numeric)], use='pairwise')
+```
+#Barlette test on the correlation matrix in prep for FA. The p value shall be less than 0.5.
+A significant test tells us that the R-matrix is not an identity matrix (identity matrix is the case when variables are NOT related to each other and corr is zero); Therefore, if it is significant then it means that the correlations between variables are (overall) significantly different from zero, if Bartlett’s test is significant then it is good news (Field, 2009)
+```{r}
+cortest.bartlett(SALEScorr, n=394)
+```
+$chisq
+[1] 5277.438
+
+$p.value
+[1] 0
+
+$df
+[1] 300
+
+#KMO test for the degree of common variance (ideally, a score of 0.5 or higher is good). values close to 1 indicates that patterns of correlations are relatively compact and so factor analysis should yield distinct and reliable factors.
+
+```{r}
+KMO(SALEScorr)
+
+```
+Overall MSA =  0.95
+
+Saving correlation df as a matrix
+
+```{r}
+SALESMatrix <- as.matrix(SALEScorr)
+```
+
+#leven's test
+
+```{r}
+leveneTest(SALES_Q$Question, SALES_Q$SS)
+```
+
+#Factor Analysis
+
+Loading libraries
+
+```{r}
+library(tidyverse) # For data wrangling
+library(lavaan) # For CFA/MI/SEM
+library(semPlot) # For CFA/MI/SEM
+library (semTools) # For CFA/MI/SEM
+library(OpenMx) # For SEM
+library(pastecs) # Needed to run normatlity tests
+library(car) # Needed to run Levene test
+library(lsr) # Navarro package for running psychology tests
+library(psych) # for key psychology stats
+library(effects) # Effects package, needed for the estimated means, includses lower/upper 95% conf limits
+options(scipen=99) # This is to indicate how many digits after the decimal, this one is for 2 digits, but can be changed
+```
+CFA and 1-defining the model
+
+Q7-Q14	SE (8 questions)
+Q15-Q22	TV (8 questions)
+Q23-Q32	MG (9 questions) #Question 30 is not present in the survey
+
+Let's start be defining the measurement model
+
+```{r}
+latents.model <- 'SelfEfficacy =~ Q08 +  Q07 + Q09 + Q10 + Q11 + Q12 + Q13 + Q14
+TaskValue =~ Q18 + Q15 + Q16 + Q17 + Q19 + Q20 + Q21 + Q22
+MasteryGoals =~ Q24 + Q23 + Q25 + Q26 + Q27 + Q28 + Q29 + Q31 + Q32'
+```
+
+Run CFA model
+
+
+```{r}
+SALESfit <- cfa(latents.model, data = SALES)#stardard fit
+summary(SALESfit) #to view summary of the fit
+partable(SALESfit) # to have the summary of parameters converted to a dataframe
+vartable(SALESfit) # to have the summary of variables converted to a dataframe
+parameterestimates(SALESfit) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters.
+```
+To see a summary of the tests and esimtates of the model
+
+```{r}
+summary(SALESfit,fit.measures = TRUE)
+```
+#Notes reagarding fit measures
+
+Comparative Fit Index (CFI)                    0.848
+Tucker-Lewis Index (TLI)                       0.832
+RMSEA                                          0.082
+
+#Plotting a sem diagram
+
+```{r}
+semPaths(SALESfit, title= FALSE, curvePivot= TRUE)
+```
+Another way of viewing the plot
+
+```{r}
+semPaths(SALESfit, "std", edge.label.cex=0.5, 
+         curvePivot = TRUE, exoVar = FALSE)
+```
+
+Note: the thicker the lines, the higher the loadings. 
+
+#Factor scores (refer to https://rdrr.io/cran/lavaan/man/lavPredict.html)
+
+```{r}
+fit <- cfa(latents.model, data = SALES, se = "robust", test = "Satorra-Bentler") 
+head(lavPredict(fit)) #first we need to define the model
+head(lavPredict(fit, type = "ov")) #then we use the lavpredict function to compute estimated values for latent variables.
+idx <- lavInspect(fit, "case.idx") #The lavInspect() functions can be used to inspect/extract information that is stored inside (or can be computed from) a fitted lavaan object. 
+SALESfscores <- lavPredict(fit, newdata = SALES)
+## loop over factors
+for(fs in colnames(fscores)) {
+SALES[idx, fs] <- fscores[ , fs]
+} #I am not sure what does the last piece of code mean.
+head(SALES)
+summary(SALESfscores)
+```
+#Question:  By checking the idx cases, only 365 cases out of 395 were considered. I am not sure why was that the case. 
+
+Converting fscores from lavaan matrix to dataframe
+```{r}
+SALESfscores.df <- as.data.frame(SALESfscores)
+```
+
+Saving SALES scores in a new file
+
+```{r}
+write.csv(SALESfscores.df, "SALESfscores.csv")
+```
+
+#Matching the scores with the cases. To do so,I had to create row nos. in both cases to match them. 
+
+Add new coloumn to existing df (idx) row no. to identify the cases
+```{r}
+SALESfscores.df$rowno = idx
+```
+Creating a new coloumn for row no. in the SALES 
+
+```{r}
+SALES$rowno = seq.int(nrow(SALES))
+```
+
+```{r}
+SALESfscore_joined <- inner_join (x = SALES, y= SALESfscores.df, by = "rowno")
+SALESfscore_joined
+
+```
+
+```{r}
+SALES_Factors <- select(SALESfscore_joined,ID:Gender, SelfEfficacy:MasteryGoals)
+```
+
+Saving salesfacotrs to a new  file 
+```{r}
+write.csv(SALES_Factors, "SALES_Factors.csv")
+```
+
+#Checking normality of the fscores
+
+```{r}
+hist(SALESfscores.df)
+```
+#Adding normality curve
+
+```{r}
+
+SALESF_hist + stat_function(fun = dnorm, args = list(mean = mean(PALS$sum,
+na.rm = TRUE), sd = sd(PALS_Q$score, na.rm = TRUE)), colour = "black", size = 1)
+```
+
+
+
+

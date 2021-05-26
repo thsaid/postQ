@@ -21,9 +21,6 @@ Notes: Questions 26 and 31 are repeated
 Questions 24 and 29 are repeated
 
 
-
-
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -37,7 +34,7 @@ library(tidyverse)
 Loading SALES files
 
 ```{r}
-SALES <- read.csv("SALES.csv")
+SALES <- read.csv("SALES_full.csv")
 ```
 Renaming th he Questions using S, to avoid confusion with the SALES when merged together
 
@@ -70,6 +67,10 @@ Selecting relevant coloumns for the matrix
 PALS_SALES_filtered <- select(PALS_SALES, ID, Gender.x, Certificate,PQ01:PQ19, SQ07:SQ32)
 ```
 
+```{r}
+write.csv(PALS_SALES_filtered, "PALS_SALES.csv")
+```
+
 
 After joining the two tables the total observations are 359 observations, (that's the total no. of participants who did the pre and post surveys)
 
@@ -81,20 +82,22 @@ After joining the two tables the total observations are 359 observations, (that'
 
 library(corpcor); library(GPArotation); library(psych)
 library(boot); library(ggm); library(ggplot2); library(Hmisc);
-library(polycor)
+library(polycor);library(lavaan)
 
 ```
 Running correlations for the whole data frame. This command below excludes the missing values and those that are not numeric.
 ```{r}
 cor(PALS_SALES_filtered[sapply(PALS_SALES_filtered, is.numeric)], use='pairwise')
 ```
-Saving the correlation matrix to data
+Saving the correlation matrix to a variable
 
 ```{r}
 P_Scorr <- cor(PALS_SALES_filtered[sapply(PALS_SALES_filtered, is.numeric)], use='pairwise')
 ```
 
+
 Running Barlette test on the correlation matrix in prep for FA. The p value shall be less than 0.5.
+
 A significant test tells us that the R-matrix is not an identity matrix(identity matrix is the case when variables are NOT related to each other and corr is zero); Therefore, if it is significant then it means that the correlations between variables are (overall) significantly different from zero, if Bartlett’s test is significant then it is good news (Field, 2009)
 
 
@@ -152,8 +155,228 @@ factors_data_4
 ```
 The scores for the 5 factor model, works better than the 4 factor model.
 
+#Parallel analysis to identify the key factors needed
+
+```{r}
+fa.parallel(P_Scorr,n.obs =359,fa ="fa")
+```
+
+#Q: I am not sure how to save the output of my data
 
 ```{r}
 write.table (factors_data_5, "PALS_SALES_factors.csv")
+```
+
+#CFA
+
+#PALS Questions
+
+Summary of the PALS Questions and their factors
+Mastery Goals (MG): PQ01:PQ05
+Performance Approach Goals (PAPG) Q06:Q10
+Performance Avoidance Goals (PAVG) Q11:Q14
+Self-efficacy (SE) PQ15:PQ19
+
+#Intro to SALES survey
+
+Self-efficacy: SQ7-SQ14	SE (8 questions)
+Task Value: Q15-Q22	TV (8 questions)
+Mastery Goals Q23-Q32	MG (8 questions), Question 30 is missing. 
+
+Will run several CFA models to see how both tools fit together
+
+#Model1: Treating Motivation as one factor
+
+Let's start be defining the measurement model
+
+```{r}
+latents.model1 <- 'Motivation =~ PQ02 + PQ01  + PQ03 + PQ04 + PQ05 + PQ09 + PQ06 + PQ07 + PQ08 + PQ10 + PQ14 + PQ11 + PQ12 + PQ13 + PQ16 + PQ15 + PQ17 + PQ18 + PQ19 + SQ08 +  SQ07 + SQ09 + SQ10 + SQ11 + SQ12 + SQ13 + SQ14
++ SQ18 + SQ15 + SQ16 + SQ17 + SQ19 + SQ20 + SQ21 + SQ22
++ SQ24 + SQ23 + SQ25 + SQ26 + SQ27 + SQ28 + SQ29 + SQ31 + SQ32'
+
+```
+
+```{r}
+PALS_SALESfit <- cfa(latents.model1, data = PALS_SALES, se = "robust", test = "Satorra-Bentler") #robust ML fit
+summary(PALS_SALESfit,fit.measures = TRUE) #to view summary of the fit
+partable(PALS_SALESfit) # to have the summary of parameters converted to a dataframe
+vartable(PALS_SALESfit) # to have the summary of variables converted to a dataframe
+parameterestimates(PALS_SALESfit) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters.
+```
+To see a summary of the tests and esimtates of the model
+
+```{r}
+summary(PALS_SALESfit,fit.measures = TRUE)
+```
+
+Model 1 fit indices:
+
+User Model versus Baseline Model:
+
+  Comparative Fit Index (CFI)                    0.471
+  Tucker-Lewis Index (TLI)                       0.445
+  
+  Model is unacceptable, even with the robust analysis 
+  
+#Model 2:Treating each tool as a separate factor
+
+```{r}
+latents.model2 <- 'PALS =~ PQ02 + PQ01  + PQ03 + PQ04 + PQ05 + PQ09 + PQ06 + PQ07 + PQ08 + PQ10 + PQ14 + PQ11 + PQ12 + PQ13 + PQ16 + PQ15 + PQ17 + PQ18 + PQ19
+SALES =~ SQ08 +  SQ07 + SQ09 + SQ10 + SQ11 + SQ12 + SQ13 + SQ14
++ SQ18 + SQ15 + SQ16 + SQ17 + SQ19 + SQ20 + SQ21 + SQ22
++ SQ24 + SQ23 + SQ25 + SQ26 + SQ27 + SQ28 + SQ29 + SQ31 + SQ32'
+```
+
+```{r}
+PALS_SALESfit2 <- cfa(latents.model2, data = PALS_SALES, se = "robust", test = "Satorra-Bentler") #robust ML fit
+summary(PALS_SALESfit2) #to view summary of the fit
+partable(PALS_SALESfit2) # to have the summary of parameters converted to a dataframe
+vartable(PALS_SALESfit2) # to have the summary of variables converted to a dataframe
+parameterestimates(PALS_SALESfit2) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters.
+summary(PALS_SALESfit2,fit.measures = TRUE)
+```
+
+Model2 fit indices: 
+
+User Model versus Baseline Model:
+
+  Comparative Fit Index (CFI)                    0.595
+  Tucker-Lewis Index (TLI)                       0.575
+  
+#Model3:Putting the common constructs together (regardless of the tool)
+
+5 factor model: Putting MG & SE together, differentiating between Perf App and Avoidance goals.
+```{r}
+latents.model3 <- 'MasteryGoals =~ PQ02 + PQ01  + PQ03 + PQ04 + PQ05+ SQ24 + SQ23 + SQ25 + SQ26 + SQ27 + SQ28 + SQ29 + SQ31 + SQ32 
+PerfAppGoals =~  PQ09 + PQ06 + PQ07 + PQ08 + PQ10
+PerfAvGoals =~ PQ14 + PQ11 + PQ12 + PQ13 
+SelfEfficacy =~ PQ16 + PQ15 + PQ17 + PQ18 + PQ19 + SQ08 +  SQ07 + SQ09 + SQ10 + SQ11 + SQ12 + SQ13 + SQ14
+TaskValue =~ SQ18 + SQ15 + SQ16 + SQ17 + SQ19 + SQ20 + SQ21 + SQ22'
+```
+
+```{r}
+PALS_SALESfit3 <- cfa(latents.model3, data = PALS_SALES, se = "robust", test = "Satorra-Bentler") #robust ML fit
+summary(PALS_SALESfit3) #to view summary of the fit
+partable(PALS_SALESfit3) # to have the summary of parameters converted to a dataframe
+vartable(PALS_SALESfit3) # to have the summary of variables converted to a dataframe
+parameterestimates(PALS_SALESfit3) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters.
+summary(PALS_SALESfit3,fit.measures = TRUE)
+```
+
+Model3 fit indices (improved)
+
+User Model versus Baseline Model:
+
+  Comparative Fit Index (CFI)                    0.768
+  Tucker-Lewis Index (TLI)                       0.754
+Root Mean Square Error of Approximation:
+
+  RMSEA                                          0.073
+ 
+  The robust fit is slightly better..but not accepatable
+  
+  
+#Model4: Same as model3, but combining peformance goals in one factor: 4 factor model
+
+```{r}
+latents.model4 <- 'MasteryGoals =~ PQ02 + PQ01  + PQ03 + PQ04 + PQ05+ SQ24 + SQ23 + SQ25 + SQ26 + SQ27 + SQ28 + SQ29 + SQ31 + SQ32 
+PerfGoals =~  PQ09 + PQ06 + PQ07 + PQ08 + PQ10 + PQ14 + PQ11 + PQ12 + PQ13 
+SelfEfficacy =~ PQ16 + PQ15 + PQ17 + PQ18 + PQ19 + SQ08 +  SQ07 + SQ09 + SQ10 + SQ11 + SQ12 + SQ13 + SQ14
+TaskValue =~ SQ18 + SQ15 + SQ16 + SQ17 + SQ19 + SQ20 + SQ21 + SQ22'
+```
+
+```{r}
+PALS_SALESfit4 <- cfa(latents.model4, data =PALS_SALES)#standard fit
+summary(PALS_SALESfit4) #to view summary of the fit
+partable(PALS_SALESfit4) # to have the summary of parameters converted to a dataframe
+vartable(PALS_SALESfit4) # to have the summary of variables converted to a dataframe
+parameterestimates(PALS_SALESfit4) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters.
+summary(PALS_SALESfit4,fit.measures = TRUE)
+```
+Model4 Fit indices
+
+User Model versus Baseline Model:
+
+  Comparative Fit Index (CFI)                    0.752
+  Tucker-Lewis Index (TLI)                       0.738
+
+The fit of this model is lower than the 4 factor model.
+
+#Model5, 6 factors SALES as one unit, PALS divided into Perf.Goals and MG and SE
+
+```{r}
+latents.model6 <- 'SALES =~ SQ08 + SQ07 + SQ09 + SQ10 + SQ11 + SQ12 + SQ13 + SQ14 + SQ18 + SQ15 + SQ16 + SQ17 + SQ19 + SQ20 + SQ21 + SQ22 + SQ24 + SQ23 + SQ25 + SQ26 + SQ27 + SQ28 + SQ29 + SQ31 + SQ32
+PerfGoals =~ PQ09 + PQ06 + PQ07 + PQ08 + PQ10 + PQ14 + PQ11 + PQ12 + PQ13 
+MG_SE_P  =~ PQ16 + PQ15 + PQ17 + PQ18 + PQ19 + PQ02 + PQ01  + PQ03 + PQ04 + PQ05'
+```
+
+```{r}
+PALS_SALESfit6  <- cfa(latents.model6 , data = PALS_SALES,se = "robust", test = "Satorra-Bentler")#stardard fit
+summary(PALS_SALESfit_three ) #to view summary of the fit
+vartable(PALS_SALESfit_three ) # to have the summary of variables converted to a dataframe
+parameterestimates(PALS_SALESfit_three ) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters
+summary(PALS_SALESfit_three  ,fit.measures = TRUE)
+```
+User Model versus Baseline Model:               Std         Robust
+
+  Comparative Fit Index (CFI)                    0.967       0.953
+  Tucker-Lewis Index (TLI)                       0.937       0.911
+                                                                  
+  Robust Comparative Fit Index (CFI)                         0.968
+  Robust Tucker-Lewis Index (TLI)                            0.939
+  
+  RMSEA                                          0.131       0.119
+
+
+Removing SE_S, the fit did not improve. it worsened. 
+
+```{r}
+latents.model7 <- 'SALES =~ SQ18 + SQ15 + SQ16 + SQ17 + SQ19 + SQ20 + SQ21 + SQ22 + SQ24 + SQ23 + SQ25 + SQ26 + SQ27 + SQ28 + SQ29 + SQ31 + SQ32
+PerfGoals =~ PQ09 + PQ06 + PQ07 + PQ08 + PQ10 + PQ14 + PQ11 + PQ12 + PQ13 
+MG_SE_P  =~ PQ16 + PQ15 + PQ17 + PQ18 + PQ19 + PQ02 + PQ01  + PQ03 + PQ04 + PQ05'
+```
+
+```{r}
+PALS_SALESfit7  <- cfa(latents.model7 , data = PALS_SALES,se = "robust", test = "Satorra-Bentler")#stardard fit
+summary(PALS_SALESfit7) #to view summary of the fit
+vartable(PALS_SALESfit7 ) # to have the summary of variables converted to a dataframe
+parameterestimates(PALS_SALESfit7 ) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters
+summary(PALS_SALESfit7  ,fit.measures = TRUE)
+
+```
+
+User Model versus Baseline Model:
+
+  Comparative Fit Index (CFI)                    0.800       0.811
+  Tucker-Lewis Index (TLI)                       0.787       0.799
+                                                                  
+ RMSEA                                          0.077       0.062
+```{r}
+sink("model7.doc")
+print(summary(PALS_SALESfit7  ,fit.measures = TRUE))
+sink()
+```
+
+```{r}
+modindices(PALS_SALESfit7, sort. = T)
+```
+
+#Appendix
+PALS
+```{r}
+latents.model3 <- 'MasteryGoals =~ PQ02 + PQ01  + PQ03 + PQ04 + PQ05
+PerfAppGoals =~  PQ09 + PQ06 + PQ07 + PQ08 + PQ10
+PerfAvGoals =~ PQ14 + PQ11 + PQ12 + PQ13 
+SelfEfficacy =~ PQ16 + PQ15 + PQ17 + PQ18 + PQ19
+```
+
+SALES
+
+SelfEfficacy =~ SQ08 +  SQ07 + SQ09 + SQ10 + SQ11 + SQ12 + SQ13 + SQ14
+TaskValue =~ SQ18 + SQ15 + SQ16 + SQ17 + SQ19 + SQ20 + SQ21 + SQ22
+MasteryGoals =~ SQ24 + SQ23 + SQ25 + SQ26 + SQ27 + SQ28 + SQ29 + SQ31 + SQ32'
+'
+```{r}
+
 ```
 
