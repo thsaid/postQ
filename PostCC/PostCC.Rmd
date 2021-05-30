@@ -357,6 +357,8 @@ Replacing NAs (for now, I will replace them, later I can do multiple imputations
  PostCC <- rename(PostCC, Q08post=Q35, Q09post= Q36, Q10post= Q37, Q11post= Q38, Q12post = Q39, Q13post= Q40, Q14post = Q41, Q15post = Q42, Q16post= Q43, Q17post = Q44, Q18post = Q45, Q19post = Q46, Q20post = Q47, Q21post = Q48, Q22post = Q49, Q24post = Q51)
 ```
 
+
+
 ```{r}
 PostCC <- select (PostCC, ID:Q24post)
 ```
@@ -419,4 +421,32 @@ The table produced a giant data frame (84k observations) since each question was
 PostCC2 <- select(PostQ, ID, Q35:Q51)
 ```
 
+
+```{r}
+PostCC2 <- rename(PostCC2, Q08=Q35, Q09= Q36, Q10= Q37, Q11= Q38, Q12 = Q39, Q13= Q40, Q14 = Q41, Q15 = Q42, Q16= Q43, Q17 = Q44, Q18 = Q45, Q19 = Q46, Q20 = Q47, Q21 = Q48, Q22= Q49, Q24 = Q51)
+```
+
+```{r}
+PostCC_long2 <- gather(PostCC2, Question, Response, Q08:Q24, factor_key=TRUE)
+```
+
+```{r}
+PostCCscores2 <- inner_join(PostCC_long2, scoring2, c("Response"))
+```
+
+```{r}
+PostCCscores2 <- PostCCscores2 %>% 
+  rename(PostValue= value) %>% 
+  select(ID:PostValue)
+```
+
+```{r}
+write.csv(PostCCscores2, "PostCCscores2.csv")
+```
+
+```{r}
+PreCCscores <- rename(PreCCscores,PreValue= value ) %>% 
+
+PreCCscores <- select(PreCCscores, ID:PreValue)
+```
 
