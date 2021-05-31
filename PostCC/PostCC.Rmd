@@ -409,6 +409,11 @@ write.csv(PostCCscores2, "PostCCscores.csv")
 PreCCscores <- read.csv("PreCCscores.csv")
 ```
 
+```{r}
+PreCCscores %>%
+rename (Q08= Q8, Q09= Q9)
+```
+
 #Joining the pre and post tables
 
 ```{r}
@@ -455,11 +460,17 @@ Joining the pre and post again after leaving the Questions name as is
 ```{r}
 PrePostCC2 <- inner_join(PreCCscores, PostCCscores2, c("ID","Question"))
 ```
-Grouping them by questions
+Frequency analysis (This works only one wide data not long)
 
 ```{r}
-PrePostCC2 %>% 
-             group_by(ID)
+PrePostCC_Frequency <- ExpCustomStat(PrePostCC2,Cvar = c("Q08","Q9","Q10", "Q11", "Q12", "Q13", "Q14", "Q15", "Q16", "Q17", "Q18", "Q19", "Q20", "Q21", "Q22", "Q24"), gpby= FALSE)
+```
+Description by ID
+```{r}
+describe.by(PrePostCC2, "ID")
 ```
 
+```{r}
+describe.by(PrePostCC2, "Question")
+```
 
