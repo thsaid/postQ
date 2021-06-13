@@ -1,0 +1,94 @@
+---
+Title: "LEARNING"
+author: "Tamer Said"
+date: "16/07/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+I created the variable postQ to save it as a variable (data frame) or tibble
+```{r}
+postQ <-read.csv("Post Questionnaire.csv")
+```
+
+Load tidyverse library
+
+```{r}
+install.packages("tidyverse")
+```
+Load tidyverse library
+```{r}
+library(tidyverse)
+```
+
+I used the summary function to have a quick look over my data 
+```{r}
+Summary(postQ)
+```
+
+I forgot to add the ID no. and picture, so I added them here, 
+
+```{r}
+SALES <- select(postQ,Q1:Q4, Q7:Q32)
+```
+
+
+```
+I am going to rename the variables instead of having question names
+
+```{r}
+SALES %>% 
+  rename(ID= Q1, Picture= Q2, Color= Q3, Gender= Q4)
+```
+
+Scoring of the SALES Questions
+
+```{r}
+scoring <- read.csv("scoring.csv")
+```
+
+Arranging data in long format ( I got confused here, and converted the whole dataset rather than SALES, is there a way to undo this?)
+
+```{r}
+postQ_long <- pivot_longer(data = postQ,cols =Q7:Q32,names_to = "Question",values_to = "Response"  )
+```
+
+Now I am going to arrange the SALES reponses in long format (check with Michelle if what I got looks correct)
+
+```{r}
+SALES_long <- pivot_longer(data = SALES,cols =Q7:Q32,names_to = "Question",values_to = "Response"  )
+
+```
+Renaming variables in SALES_long
+
+```{r}
+SALES_long %>% 
+  rename(ID= Q1, Picture= Q2, Color= Q3, Gender= Q4)
+```
+```
+Joining the tables together to calculate the scores
+
+```{r}
+SALES_joined <- inner_join (x = SALES_long,y= scoring, by = "Response")
+```
+ Renaming the coloumns
+ 
+```{r}
+SALES_joined %>% 
+  rename(ID= Q1, Picture= Q2, Color= Q3, Gender= Q4)
+
+```
+ 
+ Finding score of each participant
+ 
+```{r}
+SALES_scores <- SALES_joined %>% 
+             group_by(ID) %>% 
+             summarise (SS = sum(score))
+```
+

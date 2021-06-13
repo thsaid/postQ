@@ -406,24 +406,19 @@ write.csv(PostCCscores2, "PostCCscores.csv")
 ```
 
 ```{r}
-PreCCscores <- read.csv("PreCCscores.csv")
+PreCCscores <- read.csv("PreCCscores_Complete.csv")
 ```
 
 ```{r}
-PreCCscores %>%
-rename (Q08= Q8, Q09= Q9)
+
+PreCCscores <- select (PreCCscores, ID, Question:value) %>%
+rename(PostValue = value)
 ```
 
 #Joining the pre and post tables
 
 ```{r}
-PrePostCC <- inner_join(PreCCscores, PostCCscores2, c("ID"))
-```
-
-The table produced a giant data frame (84k observations) since each question was labeled twice, and the data was not named correctly. Wil now use the same labels for both questions.
-
-```{r}
-PostCC2 <- select(PostQ, ID, Q35:Q51)
+PrePostCC <- inner_join(PreCCscores, PostCCscores2, c("ID", "Question"))
 ```
 
 
@@ -440,6 +435,10 @@ PostCCscores2 <- inner_join(PostCC_long2, scoring2, c("Response"))
 ```
 
 ```{r}
+PostCCscoresleft <- left_join(PostCC_long, scoring2, c("Response"))
+```
+
+```{r}
 PostCCscores2 <- PostCCscores2 %>% 
   rename(PostValue= value) %>% 
   select(ID:PostValue)
@@ -450,27 +449,206 @@ write.csv(PostCCscores2, "PostCCscores2.csv")
 ```
 
 ```{r}
-PreCCscores <- rename(PreCCscores,PreValue= value ) %>% 
+write.csv(PostCCscoresleft, "PostCCscoresNA.csv")
+```
 
-PreCCscores <- select(PreCCscores, ID:PreValue)
+Individual scores
+
+```{r}
+Indvidual_PostCCScores <- group_by(PostCCscores,ID) %>% 
+             summarise(Score = sum(value))
+```
+
+```{r}
+Indvidual_PostCCScores <- rename(Indvidual_PostCCScores,
+  PostScore = "Score")
+```
+
+```{r}
+IndPreCC <- read.csv("Individual_PreCCscores.csv")
+```
+
+```{r}
+ggplot(PrePostlong, aes(fill=Time, y=Score, x=Question)) + 
+    geom_col(position="dodge", stat = "identity")
+```
+
+#Joining both tables to compare the scores of individuals
+
+```{r}
+PrePostInd <- inner_join(Indvidual_PostCCScores, IndPreCC, c("ID"))
+```
+
+```{r}
+PrePostInd <- select(PrePostInd, -X)
+```
+
+```{r}
+write.csv(PrePostInd, "PrePostCCInd.csv")
+```
+
+```{r}
+PrePostInd_long <- gather(PrePostInd, Time, Score, PreScore, PostScore)
+```
+
+#Comparision of individual scores (pre/post)
+```{r}
+ggplot(PrePostInd_long, aes(fill=Time, y=Score, x=ID)) + 
+    geom_col(position="dodge", stat = "identity")
+```
+
+
+```{r}
+PreCCscores <- rename(PreCCscores,PreValue= PostValue ) 
 ```
 
 Joining the pre and post again after leaving the Questions name as is
 
 ```{r}
-PrePostCC2 <- inner_join(PreCCscores, PostCCscores2, c("ID","Question"))
+PrePostCC <- inner_join(PreCCscores, PostCCscores2, c("ID","Question"))
 ```
 Frequency analysis (This works only one wide data not long)
 
 ```{r}
 PrePostCC_Frequency <- ExpCustomStat(PrePostCC2,Cvar = c("Q08","Q9","Q10", "Q11", "Q12", "Q13", "Q14", "Q15", "Q16", "Q17", "Q18", "Q19", "Q20", "Q21", "Q22", "Q24"), gpby= FALSE)
 ```
+
+```{r}
+PrePostCC_Frequency <- ExpCustomStat(PrePostCC,Cvar = c("PreValue", "PostValue"), gpby= FALSE)
+```
+```
+
 Description by ID
 ```{r}
-describe.by(PrePostCC2, "ID")
+describe.by(PrePostCC, "ID")
 ```
 
 ```{r}
-describe.by(PrePostCC2, "Question")
+describe.by(PrePostCC, "Response")
+```
+Exporting prepost scores 
+
+```{r}
+write.csv(PrePostCC, "PrePostCC.csv")
+```
+
+#Comparative plots
+
+```{r}
+ggbarplot(PrePostCC, x = "Question", y = "PreValue")
+```
+
+```{r}
+ggbarplot(PrePostCC, x = "Question", y = "PostValue")
+```
+
+```{r}
+p1 <- ggplot(PrePostCC, aes( y=PreValue, x=Question))  
+   
+```
+Trying Violin chart
+```{r}
+p2 <- ggplot(PrePostCC, aes(x=Question, y=PostValue))
+
+```
+
+```{r}
+geom_bar()
+```
+
+```{r}
+ggplot(PrePostCC, aes(x=Question), y=PreValue) + 
+ggplot(PrePostCC, aes(x=Question, y=PostValue))
+ geom_bar(position="", stat="identity")
+```
+
+```{r}
+ggplot(data = PrePostCC) + 
+  geom_col(aes(x = Question, y = PreValue)) +
+  par(new = TRUE) +
+  geom_col(aes(x = Question, y = PostValue)) 
+geom_bar(position="stack", stat="identity") 
+
+```
+
+```{r}
+ggplot(data = PrePostCC) + 
+  geom_col(aes(x = Question, y = PreValue, PostValue))
+```
+
+
+
+```{r}
+data = PrePostCC %>%
+plot(x = "Question", y= "PreValue", pch = 16, col = 2)              # Create first plot
+par(new = TRUE)                             # Add new plot
+plot(x = "Question", y= "PostValue", pch = 17, col = 3,              # Create second plot without axes
+     axes = FALSE, xlab = "", ylab = "")
+axis(side = 4, at = pretty(range(y2)))      # Add second axis
+mtext("y2", side = 4, line = 3)             # Add second axis label
+```
+
+Converting data to long in order to put the time as condition to graph it
+```{r}
+medium <- select(PrePostCC, ID, Question, PreValue, PostValue)
+```
+
+```{r}
+PrePostlong <- gather(medium, Time, Score , PreValue:PostValue, factor_key=TRUE)
+```
+
+```{r}
+PrePostlong %>% 
+             group_by(ID,Question)
+            
+
+```
+
+
+```{r}
+ggplot(PrePostlong, aes(fill=Time, y=Score, x=Question)) + 
+    geom_bar(position="stack", stat="identity")
+```
+
+```{r}
+ggplot(PrePostlong, aes(fill=Time, y=Score, x=Question)) + 
+    geom_col(position="dodge", stat = "identity")
+```
+
+Violin Charts
+
+```{r}
+Violin = PrePostlong %>%
+ggplot(aes(fill=Time, y=Score, x=Question)) + 
+    geom_violin(position="dodge", alpha=0.5) 
+Violin
+```
+
+
+Density chart
+```{r}
+PrePostlong %>%
+ggplot(aes(fill=Time, y=Score, x=Question)) + 
+     geom_density(adjust=1.5, alpha=.4) 
+```
+Did not work well
+
+Lolipop charts
+```{r}
+ggplot(PrePostlong, aes(x=Question, y=Score)) +
+  geom_point() + 
+  geom_segment( aes(x=Question, xend=Question, y=0, yend=Score))
+```
+
+```{r}
+ggplot(PrePostCC) +
+geom_segment( aes(x=Question, xend=Question, y=PreValue, yend=PostValue), color="grey") +
+  geom_point( aes(x=Question, y=PreValue), color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
+  geom_point( aes(x=Question, y=PostValue), color=rgb(0.7,0.2,0.1,0.5), size=3 )
+```
+
+
+```{r}
+library(hrbrthemes)
 ```
 
