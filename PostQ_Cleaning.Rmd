@@ -227,10 +227,30 @@ Correcting a wrong value in gender (From mint to male), color and picture.
 
 ```
 
-#Saving the changes to csv file
+#Saving the changes to csv file (last edits on 14/6/21)
 
 ```{r}
-write.csv(postQ, 'postQ_unique.csv')
+write.csv(PostQ, 'postQ_unique_complete.csv')
 ```
 
 #Checking for duplicates on 14/6/21
+
+```{r}
+duplicated(PostQ$ID)
+```
+```{r}
+PostQ$ID[PostQ$U_ID=="A269"] <- "4593" 
+```
+
+```{r}
+PostQ$ID[PostQ$U_ID=="A152"] <- "45710" 
+```
+
+Removing variables that has certain characters
+
+```{r}
+PostQ <- filter(PostQ,ID != "effe")
+PostQ <-filter(PostQ,U_ID != "A174")
+
+```
+
