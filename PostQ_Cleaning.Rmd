@@ -133,11 +133,6 @@ postQ$ID[postQ$U_ID=="A22"] <- "4293F"
 
 #4294
 
-=======
-if (postQ$ID == "4268" && postQ$Picture == "cat")
-+ {postQ$ID <- "4286"}
-```
-
 
 
 ```{r}
@@ -238,4 +233,4 @@ Correcting a wrong value in gender (From mint to male), color and picture.
 write.csv(postQ, 'postQ_unique.csv')
 ```
 
-
+#Checking for duplicates on 14/6/21
