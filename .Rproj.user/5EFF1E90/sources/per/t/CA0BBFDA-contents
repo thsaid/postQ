@@ -1,0 +1,281 @@
+---
+title: "PostQ_Cleaning"
+author: "Tamer Said"
+date: "18/12/2020"
+output: html_document
+---
+
+<<<<<<< HEAD
+Notes on dates
+
+Ms.Rasha group on 16/5
+
+=======
+>>>>>>> 958f6d4ed7cb8936b003e4e2c5ff5bd49453f436
+```{r}
+postQ <-read.csv("Post Questionnaire.csv")
+library(tidyverse)
+```
+
+Filter postQ to select only SALES and PostCC
+
+```{r}
+postQ <- select(postQ, StartDate ,Q1:SC0)
+```
+
+Deleting first 2 rows containing redundant info
+
+```{r}
+postQ <- postQ[-c(1,2), ]
+```
+
+
+```{r}
+postQ <- rename(postQ, ID=Q1, Picture= Q2, Color= Q3, Gender= Q4, Q07=Q7, Q08 = Q8, Q09 = Q9)
+```
+
+Duplicated values 
+4250
+4268
+4272
+4279
+4281
+4293
+4294
+4310
+4368
+4381
+4408
+4419
+4419
+4538
+4538
+4571
+4571
+4739
+4739
+4755
+4755
+4756
+4756
+4760
+4760
+4765
+4765
+4899
+4899
+4907
+4907
+
+#Cleaning duplicates (To search for the row that contains the values) use the following command:
+
+#4250
+```{r}
+which(grepl(4250,postQ$ID))
+```
+Deleting the one in row 37 since it was not completed
+
+```{r}
+postQ <- postQ[-37, ]
+```
+
+<<<<<<< HEAD
+```{r}
+write.csv(postQ, 'postQ.csv')
+
+```
+
+I created unique IDs to identify those students with duplicates 
+
+#Loading unique values 
+```{r}
+postQ <- read.csv("postQ_unique.csv")
+```
+
+=======
+>>>>>>> 958f6d4ed7cb8936b003e4e2c5ff5bd49453f436
+#4268
+
+One entry will be changed to 4286 instead, the problem with this, is that it will change both values to the same no. i have to select a condition. 
+
+```{r}
+postQ$ID[postQ$U_ID=="A25"] <- 4286
+
+```
+To find the row no., I can use the following command:
+```{r}
+which (grepl(4268,postQ$Q1))
+```
+
+#4272
+Change 4272 to 4272A (ALS) on 16/4
+```{r}
+postQ$ID[postQ$U_ID=="A15"] <- "4272A"
+```
+
+#4279. change Female to 4279F
+
+```{r}
+postQ$ID[postQ$U_ID=="A133"] <- "4279F"
+```
+
+#4281 change Female to 4281F
+
+```{r}
+postQ$ID[postQ$U_ID=="A130"] <- "4281F"
+```
+
+#4293
+
+```{r}
+postQ$ID[postQ$U_ID=="A22"] <- "4293F"
+```
+
+#4294
+
+
+
+```{r}
+which (grepl(4268,postQ$Q1))
+```
+
+>>>>>>> 958f6d4ed7cb8936b003e4e2c5ff5bd49453f436
+```{r}
+postQ$ID[postQ$U_ID=="A23"] <- "4294F"
+```
+
+#4310
+Change 4310 Ms Rasha to 4310R (16/5)
+
+```{r}
+postQ$ID[postQ$U_ID=="A217"] <- "4310R"
+```
+
+#4368, change Female to 4368F
+
+```{r}
+postQ$ID[postQ$U_ID=="A68"] <- "4368F"
+```
+
+#4408, change Female to 4408F
+```{r}
+postQ$ID[postQ$U_ID=="A98"] <- "4408F"
+```
+
+#4419, change male (CES) to "4419C"
+
+```{r}
+postQ$ID[postQ$U_ID=="A90"] <- "4419C"
+```
+
+#4538, change to 4538F
+
+```{r}
+postQ$ID[postQ$U_ID=="A171"] <- "4538F"
+```
+
+#4571, The 2 females are in the same session, using IP address, I will add one digit after the 1, to the number. 45710 and 45719. 
+
+```{r}
+postQ$ID[postQ$U_ID=="A152"] <- "45710"
+postQ$ID[postQ$U_ID=="A162"] <- "45719"
+```
+
+#4739, male from bedaya will be changed to 4739B (21/5)
+
+```{r}
+postQ$ID[postQ$U_ID=="A241"] <- "4739B"
+```
+
+#4755, male from bedaya will be changed to 4755B (21/5)
+
+```{r}
+postQ$ID[postQ$U_ID=="A248"] <- "4755B"
+```
+
+#4756, male from bedaya will be changed to 4756B (21/5)
+
+```{r}
+postQ$ID[postQ$U_ID=="A246"] <- "4756B"
+```
+
+#4760, female to 4760F
+```{r}
+postQ$ID[postQ$U_ID=="A285"] <- "4760F"
+```
+
+#4765, female to 4765F
+
+```{r}
+postQ$ID[postQ$U_ID=="A302"] <- "4765F"
+```
+
+#4899, (16/6) --> 4799
+
+```{r}
+postQ$ID[postQ$U_ID=="A335"] <- "4799" 
+```
+#4907
+
+```{r}
+postQ$ID[postQ$U_ID=="A336"] <- "4807" 
+```
+
+Correcting a wrong value in gender (From mint to male), color and picture.
+
+```{r}
+
+```
+
+#Saving the changes to csv file (last edits on 14/6/21)
+
+```{r}
+write.csv(PostQ, 'postQ_unique_complete.csv')
+```
+
+#Checking for duplicates on 14/6/21
+
+```{r}
+duplicated(PostQ$ID)
+```
+
+
+```{r}
+PostQ$ID[PostQ$U_ID=="A269"] <- "4593" 
+```
+
+```{r}
+PostQ$ID[PostQ$U_ID=="A152"] <- "45710" 
+```
+
+Removing variables that has certain characters
+
+```{r}
+PostQ <- filter(PostQ,ID != "effe")
+PostQ <-filter(PostQ,U_ID != "A174")
+```
+
+Checking multivariate normaility
+
+```{r}
+PostCC <- dplyr::select(PostQ, Q08:Q32)
+```
+
+```{r}
+library(MVN)
+library(QuantPsyc)
+```
+
+```{r}
+mult.norm(PostCC)
+```
+
+```{r}
+mvn(PostCC, mvnTest = "mardia")
+```
+```{r}
+mvn(PostCC, mvnTest = "royston")
+```
+From the three tests done, it appears that the data are not normally distributed. THis is not abnormal, since likert data scales does not appear to be normally disrtibuted. 
+
+
