@@ -28,7 +28,6 @@ PostCC <- PostCC[-2,]
 ```
 
 
-
 To rename the variables, you do not have to use the pipes, but in this case you will have to indicate the name of the dataset
 
 ```{r}
@@ -348,6 +347,25 @@ I discovered some blank responses, and I need to replace them by NAs (since the 
 PostCC <- read.csv("PostCC.csv",header = T, na.strings=c(""," ","NA"))
 ```
 
+#Problem: I nooticed that when coding the data in excel and replacing the values, the values for Q9Post is transferred into numbers instead of characters. 
+
+Recoding values for Q09Post 
+```{r}
+PostCC2 <- PostCC %>% mutate(Q09Post = case_when(
+PostCC$Q09post == 3 ~ c("Not Sure"),
+PostCC$Q09post == 4 ~ c("Agree"),
+PostCC$Q09post == 2 ~ c("Disagree")))
+```
+
+Recoding values for Q14Post 
+```{r}
+PostCC2 <- PostCC2 %>% mutate(Q14Post = case_when(
+PostCC$Q14post == 3 ~ c("Not Sure"),
+PostCC$Q14post == 4 ~ c("Agree"),
+PostCC$Q14post == 2 ~ c("Disagree")))
+```
+
+
 
 Replacing NAs (for now, I will replace them, later I can do multiple imputations). I noticed that Q23 has only 20 responses. I will deselect it for now. Q7 is a qualitative question, so it will be deseclted for now.
 
@@ -363,19 +381,21 @@ PostCC <- select (PostCC, ID:Q24post)
 
 
 ```{r}
-write.csv(PostCC, "PostCC.csv")
+write.csv(PostCC2, "PostCC.csv")
 ```
+
 
 Converting data to long format
 
 ```{r}
-PostCC_long <- gather(PostCC, Question, Response, Q08post:Q24post, factor_key=TRUE)
+PostCC_long <- gather(PostCC, Question, Response, Q08post:Q14Post, factor_key=TRUE)
 ```
 
 ```{r}
 PostCC_long %>%
 select(ID:Response)
 ```
+
 Descriptive analysis: Frequency analysis
 ```{r}
 PostCC_Frequency <- ExpCustomStat(PostCC,Cvar = c("Q08post","Q09post","Q10post", "Q11post", "Q12post", "Q13post", "Q14post", "Q15post", "Q16post", "Q17post", "Q18post", "Q19post", "Q20post", "Q21post", "Q22post", "Q24post"), gpby= FALSE)
@@ -390,11 +410,15 @@ scoring <- read.csv("scoring_CCcopy.csv")
 ```
 
 ```{r}
-scoring2 <- read.csv("Scoring_CC2_copy.csv")
+scoring2 <- read.csv("Scoring_CC2.csv")
 ```
 
 ```{r}
-PostCCscores2 <- inner_join(PostCC_long, scoring2, c("Response"))
+PostCCscores <- inner_join(PostCC_long, scoring2, c("Response"))
+```
+
+```{r}
+PostCCscores_left <- left_join(PostCC_long, scoring2, c("Response"))
 ```
 
 Exporting the PostCC scores
