@@ -1,0 +1,52 @@
+---
+title: "PostCC_IRT"
+author: "Tamer Said"
+date: "15/06/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Recoding values for Q09Post 
+```{r}
+PostCC2 <- PostCC %>% mutate(Q09Post = case_when(
+PostCC$Q09post == 3 ~ c("Not Sure"),
+PostCC$Q09post == 4 ~ c("Agree"),
+PostCC$Q09post == 2 ~ c("Disagree")))
+```
+
+Recoding values for Q14Post 
+```{r}
+PostCC2 <- PostCC2 %>% mutate(Q14Post = case_when(
+PostCC$Q14post == 3 ~ c("Not Sure"),
+PostCC$Q14post == 4 ~ c("Agree"),
+PostCC$Q14post == 2 ~ c("Disagree")))
+```
+
+Reading the modified file
+```{r}
+PostCC <- read.csv("PostCC.csv")
+```
+
+Selecting the relevant coloumns 
+
+```{r}
+PostCC <-select(PostCC, ID:Q14Post, -Q09post, -Q14post)
+```
+
+```{r}
+spread(PostCCscores, Question, value)
+```
+De-selecting the repsonses to avoid confusion
+
+```{r}
+PostCCscoresNew <- select(PostCCscores, - Response)
+```
+
+```{r}
+PostCCscores  %>%
+pivot_wider(names_from = Question, values_from = value)
+```
+
