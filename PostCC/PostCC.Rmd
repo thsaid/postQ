@@ -409,16 +409,27 @@ write.csv(PostCCscores2, "PostCCscores.csv")
 PreCCscores <- read.csv("PreCCscores_Complete.csv")
 ```
 
+
 ```{r}
 
-PreCCscores <- select (PreCCscores, ID, Question:value) %>%
+PreCCscores <- dplyr:: select (PreCCscores, ID, Question:value) %>%
+rename(PreValue = value)
+```
+
+```{r}
+
+PostCCscores <- dplyr:: select (PostCCscores, ID, Question:value) %>%
 rename(PostValue = value)
 ```
 
 #Joining the pre and post tables
 
+Renaming the questions
+
+
+
 ```{r}
-PrePostCC <- inner_join(PreCCscores, PostCCscores2, c("ID", "Question"))
+PrePostCC <- inner_join(PreCCscores, PostCCscores, by ="ID")
 ```
 
 
@@ -445,11 +456,11 @@ PostCCscores2 <- PostCCscores2 %>%
 ```
 
 ```{r}
-write.csv(PostCCscores2, "PostCCscores2.csv")
+write.csv(PostCCscores, "PostCCscores.csv")
 ```
 
 ```{r}
-write.csv(PostCCscoresleft, "PostCCscoresNA.csv")
+write.csv(PostCCscores_left, "PostCCscoresNA.csv")
 ```
 
 Individual scores
@@ -507,6 +518,21 @@ Joining the pre and post again after leaving the Questions name as is
 ```{r}
 PrePostCC <- inner_join(PreCCscores, PostCCscores2, c("ID","Question"))
 ```
+Nothing resulted, since the questions are named differenrlty, 
+
+```{r}
+PrePostCC <- inner_join(PreCCscores, PostCCscores2, c("ID"))
+```
+
+This code worked, but each student has two different scores, one for pre and one for post
+
+De-seclecting responses
+```{r}
+PrePostCC<- dplyr:: select(PrePostCC, - "Response.x", - "Response.y")
+```
+
+#Converting data to wide format
+
 Frequency analysis (This works only one wide data not long)
 
 ```{r}
@@ -647,6 +673,7 @@ geom_segment( aes(x=Question, xend=Question, y=PreValue, yend=PostValue), color=
   geom_point( aes(x=Question, y=PostValue), color=rgb(0.7,0.2,0.1,0.5), size=3 )
 ```
 
+#To do , after joinng the pre table, do a description like this to have a table of the pre and post values and compare the means and SD of each question.(15/6)
 
 ```{r}
 library(hrbrthemes)
