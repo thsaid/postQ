@@ -321,9 +321,12 @@ library(ggpubr)
 library(SmartEDA)
 ```
 
+```{r}
+library(tidyverse)
+```
 
 ```{r}
-PostQ <- read.csv("postQ_unique.csv")
+PostQ <- read.csv("postQ_unique_complete.csv")
 ```
 
 ```{r}
@@ -348,6 +351,10 @@ I discovered some blank responses, and I need to replace them by NAs (since the 
 PostCC <- read.csv("PostCC.csv",header = T, na.strings=c(""," ","NA"))
 ```
 
+```{r}
+write.csv(PostCC, "PostCC.csv")
+```
+
 
 Replacing NAs (for now, I will replace them, later I can do multiple imputations). I noticed that Q23 has only 20 responses. I will deselect it for now. Q7 is a qualitative question, so it will be deseclted for now.
 
@@ -368,6 +375,12 @@ PostCC <- select (PostCC, ID:Q24post)
 write.csv(PostCC, "PostCC.csv")
 ```
 
+Arrange coloumns alphabetically
+```{r}
+PostCC <- PostCC[,order(colnames(PostCC))]
+
+```
+
 Converting data to long format
 
 ```{r}
@@ -376,8 +389,10 @@ PostCC_long <- gather(PostCC, Question, Response, Q08post:Q24post, factor_key=TR
 
 ```{r}
 PostCC_long %>%
-select(ID:Response)
+select(ID, Question, Response)
 ```
+#Move this down after converting to wide format
+
 Descriptive analysis: Frequency analysis
 ```{r}
 PostCC_Frequency <- ExpCustomStat(PostCC,Cvar = c("Q08post","Q09post","Q10post", "Q11post", "Q12post", "Q13post", "Q14post", "Q15post", "Q16post", "Q17post", "Q18post", "Q19post", "Q20post", "Q21post", "Q22post", "Q24post"), gpby= FALSE)
@@ -388,15 +403,11 @@ write.csv(PostCC_Frequency, "PostCC_Frequencies.csv")
 ```
 
 ```{r}
-scoring <- read.csv("scoring_CCcopy.csv")
+scoring <- read.csv("Scoring_CC2_copy.csv")
 ```
 
 ```{r}
-scoring2 <- read.csv("Scoring_CC2_copy.csv")
-```
-
-```{r}
-PostCCscores2 <- inner_join(PostCC_long, scoring2, c("Response"))
+PostCCscores <- inner_join(PostCC_long, scoring, c("Response"))
 ```
 
 Exporting the PostCC scores
@@ -423,14 +434,6 @@ rename(PostValue = value)
 ```
 
 #Joining the pre and post tables
-
-Renaming the questions
-
-
-
-```{r}
-PrePostCC <- inner_join(PreCCscores, PostCCscores, by ="ID")
-```
 
 
 ```{r}
@@ -526,12 +529,23 @@ PrePostCC <- inner_join(PreCCscores, PostCCscores2, c("ID"))
 
 This code worked, but each student has two different scores, one for pre and one for post
 
-De-seclecting responses
+De-selecting responses
 ```{r}
 PrePostCC<- dplyr:: select(PrePostCC, - "Response.x", - "Response.y")
 ```
 
+
 #Converting data to wide format
+
+
+```{r}
+PostCC_Wide <- PostCCscores  %>%
+pivot_wider(names_from = Question, values_from = value)
+```
+
+```{r}
+write.csv(PostCC_Wide, "PostCCWide.csv")
+```
 
 Frequency analysis (This works only one wide data not long)
 
@@ -542,7 +556,7 @@ PrePostCC_Frequency <- ExpCustomStat(PrePostCC2,Cvar = c("Q08","Q9","Q10", "Q11"
 ```{r}
 PrePostCC_Frequency <- ExpCustomStat(PrePostCC,Cvar = c("PreValue", "PostValue"), gpby= FALSE)
 ```
-```
+
 
 Description by ID
 ```{r}
@@ -627,7 +641,6 @@ PrePostlong <- gather(medium, Time, Score , PreValue:PostValue, factor_key=TRUE)
 PrePostlong %>% 
              group_by(ID,Question)
             
-
 ```
 
 
