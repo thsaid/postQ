@@ -20,8 +20,16 @@ library(car); library(ggplot2); library(MASS); library(mvoutlier);
 library(mvnormtest); library(pastecs); library(reshape); library(WRS)
 ```
 
+#Data reshape: I resphaed the data in excel to mimik Fields' strcuture: New coloumn is inserted for group and will proceed in the MANOVA.rmd file
 
 ```{r}
+PrePostCC <- read.csv("PrePostCC_wide-mod.csv")
+```
+
+Changing the group variable to factor with 2 levels
+
+```{r}
+PrePostCC$Group<-factor(PrePostCC$Group, levels = c("Pre", "Post"))
 
 ```
 
