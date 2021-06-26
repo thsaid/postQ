@@ -1,0 +1,27 @@
+---
+title: "MANOVA"
+author: "Tamer Said"
+date: "24/06/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Following Andy Field's codes 
+
+```{r}
+install.packages("car"); install.packages("ggplot2"); install.
+packages("mvoutlier"); install.packages("mvnormtest"); install.
+packages("pastecs"); install.packages("reshape"); install.
+packages("WRS", repos="http://R-Forge.R-project.org")
+library(car); library(ggplot2); library(MASS); library(mvoutlier);
+library(mvnormtest); library(pastecs); library(reshape); library(WRS)
+```
+
+
+```{r}
+
+```
+

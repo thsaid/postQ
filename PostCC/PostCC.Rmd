@@ -550,8 +550,9 @@ write.csv(PostCC_Wide, "PostCCWide.csv")
 Frequency analysis (This works only one wide data not long)
 
 ```{r}
-PrePostCC_Frequency <- ExpCustomStat(PrePostCC2,Cvar = c("Q08","Q9","Q10", "Q11", "Q12", "Q13", "Q14", "Q15", "Q16", "Q17", "Q18", "Q19", "Q20", "Q21", "Q22", "Q24"), gpby= FALSE)
+PrePostCC_Frequency <- ExpCustomStat(PostCC_Wide,Cvar = c("Q08","Q9","Q10", "Q11", "Q12", "Q13", "Q14", "Q15", "Q16", "Q17", "Q18", "Q19", "Q20", "Q21", "Q22", "Q24"), gpby= FALSE)
 ```
+
 
 ```{r}
 PrePostCC_Frequency <- ExpCustomStat(PrePostCC,Cvar = c("PreValue", "PostValue"), gpby= FALSE)
