@@ -86,6 +86,7 @@ PrePostCC %>%
 ```
 77 inputs showed to be outliers
 
+<<<<<<< HEAD
 
 #Mutlivariate ouliers: 
 The Mahalanobis distance is generally used to detect multivariate outliers. The distance tells us how far an observation is from the center of the cloud, taking into account the shape (covariance) of the cloud as well.
@@ -184,6 +185,53 @@ Error from code: NAs introduced by coercionError in lm.fit(x, y, offset = offset
 Trying out another code
 
 
+=======
+
+#Mutlivariate ouliers: 
+The Mahalanobis distance is generally used to detect multivariate outliers. The distance tells us how far an observation is from the center of the cloud, taking into account the shape (covariance) of the cloud as well.
+
+
+```{r}
+# Compute distance by groups and filter outliers
+# Use -id to omit the id column in the computation
+PrePostCC %>%
+ group_by(Group) %>%
+ mahalanobis_distance %>%
+ filter(is.outlier == TRUE) %>%
+  as.data.frame()
+
+```
+
+Nothing was identified using this test..
+
+#Check univariate normality assumption
+
+The normality assumption can be checked by computing Shapiro-Wilk test for each outcome variable at each level of the grouping variable. If the data is normally distributed, the p-value should be greater than 0.05.
+
+```{r}
+PrePostCC %>%
+  group_by(Group) %>%
+  shapiro_test(Q08, Q09, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22, Q24) %>%
+  arrange(variable)
+```
+
+All the data shows that they are NOT normally distributed. This is expected since the data is binomial. 
+
+
+```{r}
+aq.plot(PrePostCC[, 3:18])
+```
+
+#MANOVA model
+
+newModel<-manova(outcome ~ predictor(s), data = dataFrame, na.action = na.exclude()
+
+```{r}
+PrePostCC %>%
+Question <- cbind("Q08":"Q24")
+```
+
+>>>>>>> a49556fcaf1bc7200eddd3a2dac702e48a680ce6
 
 ```{r}
 newModel<-manova(cbind(Q08:Q24)~ Group, data = PrePostCC, na.action = na.exclude)
@@ -196,11 +244,14 @@ PrePost_mean <- read.csv("PrePostCC_mean.csv")
 
 ```{r}
 meanModel <- manova (Question ~ cbind(PreValue, Post.Value), data = PrePost_mean,na.action = na.exclude)
+<<<<<<< HEAD
 ```
 
 ```{r}
 FIT <- lm(PrePostCC2$Group~PrePostCC2$value)
 FIT
 abline(reg = FIT)
+=======
+>>>>>>> a49556fcaf1bc7200eddd3a2dac702e48a680ce6
 ```
 
