@@ -90,6 +90,7 @@ PrePostCC %>%
 #Mutlivariate ouliers: 
 The Mahalanobis distance is generally used to detect multivariate outliers. The distance tells us how far an observation is from the center of the cloud, taking into account the shape (covariance) of the cloud as well.
 
+Nothing was identified using this test..
 
 ```{r}
 # Compute distance by groups and filter outliers
@@ -99,10 +100,20 @@ PrePostCC %>%
  mahalanobis_distance %>%
  filter(is.outlier == TRUE) %>%
   as.data.frame()
+```
+#Check linearity assumption
 
+The pairwise relationship between the outcome variables should be linear for each group. This can be checked visually by creating a scatter plot matrix using the R function
+
+```{r}
+library(GGally)
+results <- PrePostCC %>%
+  select(Q08:Q24) %>%
+  group_by("Group") %>%
+  doo(~ggpairs(.) + theme_bw(), result = "plots")
+results$plots
 ```
 
-Nothing was identified using this test..
 
 #Check univariate normality assumption
 
@@ -117,19 +128,61 @@ PrePostCC %>%
 
 All the data shows that they are NOT normally distributed. This is expected since the data is binomial. 
 
+The same can be done using QQ plots (in this case they are meaningless since the data is binomial)
+
+#Identify multicollinearity
+
+
+Cor_mat command allows for a correlation matrix for more than 2 variables
+```{r}
+  PrePostCor <- cor_mat(PrePostCC_Wide, method = "spearman")
+```
 
 ```{r}
-aq.plot(PrePostCC[, 3:18])
+write.csv(PrePostCor, "PrePostCC_Corr.csv")
 ```
+
+#Check the homogeneity of covariances assumption:
+Using the Box’s M-test
+
+Note from Field : Box’s test is notoriously susceptible
+to deviations from multivariate normality and so can be non-significant not because the matrices are similar, but because the assumption of multivariate normality is not tenable.
+
+Removing IDs from the matrix
+```{r}
+PrePostCC2 <- select(PrePostCC, -ID)
+```
+
+
+```{r}
+box_m(PrePostCC2, group = "Group")
+```
+
+#Transforming data to long format
+Gathering questions under key variable: Question and value
+
+
+```{r}
+PrePostCC2 <- PrePostCC %>% 
+  gather(key = "Question", value = "value", Q08, Q09, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22, Q24) %>%
+  group_by(Question) %>%
+  levene_test(value ~ Group)
+```
+The Levene’s test is significant (p < 0.05), for most of the questions, except for : Q09, Q10, Q11, Q12, Q13, Q17, Q24.
 
 #MANOVA model
 
-newModel<-manova(outcome ~ predictor(s), data = dataFrame, na.action = na.exclude()
-
 ```{r}
-PrePostCC %>%
-Question <- cbind("Q08":"Q24")
+#newModel<-manova(outcome ~ predictor(s), data = dataFrame, na.action = na.exclude()
+
+PrePostModel<-manova(Question ~ Group, data = PrePostCC2, na.action = na.exclude)   
 ```
+
+Error from code: NAs introduced by coercionError in lm.fit(x, y, offset = offset, singular.ok = singular.ok, ...) : 
+  NA/NaN/Inf in 'y'
+
+Trying out another code
+
 
 
 ```{r}
@@ -143,5 +196,11 @@ PrePost_mean <- read.csv("PrePostCC_mean.csv")
 
 ```{r}
 meanModel <- manova (Question ~ cbind(PreValue, Post.Value), data = PrePost_mean,na.action = na.exclude)
+```
+
+```{r}
+FIT <- lm(PrePostCC2$Group~PrePostCC2$value)
+FIT
+abline(reg = FIT)
 ```
 
