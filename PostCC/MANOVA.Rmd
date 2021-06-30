@@ -104,6 +104,7 @@ install.packages("nparLD")
 library(npmv)
 ```
 
+
 ```{r}
 nonpartest (Q08 | Q09 | Q10 | Q11 | Q12 | Q13 | Q14 | Q15 | Q16 | Q17  | Q18 | Q19 | Q20 | Q21 | Q22 | Q24 ~ Group, data =PrePostCC, permreps = 1000)
 ```

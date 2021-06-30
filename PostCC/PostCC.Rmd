@@ -483,6 +483,14 @@ IndPreCC <- read.csv("Individual_PreCCscores.csv")
 ```
 
 ```{r}
+hist(PrePostInd$PostScore)
+hist(PrePostInd$PreScore)
+```
+
+Recheck the data, since the max. pre score is 25, while the max post score is 16. There is something not correct!
+
+
+```{r}
 ggplot(PrePostlong, aes(fill=Time, y=Score, x=Question)) + 
     geom_col(position="dodge", stat = "identity")
 ```
@@ -537,6 +545,12 @@ PrePostCC<- dplyr:: select(PrePostCC, - "Response.x", - "Response.y")
 
 #Converting data to wide format
 
+Removing respnses from PostCCScores
+
+```{r}
+ PostCCscores<- select(PostCCscores, -Response, -X)
+```
+
 
 ```{r}
 PostCC_Wide <- PostCCscores  %>%
@@ -547,11 +561,31 @@ pivot_wider(names_from = Question, values_from = value)
 write.csv(PostCC_Wide, "PostCCWide.csv")
 ```
 
-Frequency analysis (This works only one wide data not long)
+
+#Merging data from pre and post 
+```{r}
+PrePostCC_Wide <- merge(PreCC_Wide,PostCC_Wide)
+```
 
 ```{r}
-PrePostCC_Frequency <- ExpCustomStat(PostCC_Wide,Cvar = c("Q08","Q9","Q10", "Q11", "Q12", "Q13", "Q14", "Q15", "Q16", "Q17", "Q18", "Q19", "Q20", "Q21", "Q22", "Q24"), gpby= FALSE)
+write.csv(PrePostCC_Wide, "PrePostCC_wide.csv")
 ```
+
+
+For analysis, removng ID and X
+
+```{r}
+PrePostCC_Wide <- dplyr:: select(PrePostCC_Wide, -ID, -X)
+```
+
+Frequency analysis (This works only one wide data not long)
+
+#Data reshape: I resphaed the data in excel to mimik Fields' strcuture: New coloumn is inserted for group and will proceed in the MANOVA.rmd file
+
+```{r}
+PrePostCC_Frequency <- ExpCustomStat(PrePostCC_Wide,Cvar = c("Q08","Q9","Q10", "Q11", "Q12", "Q13", "Q14", "Q15", "Q16", "Q17", "Q18", "Q19", "Q20", "Q21", "Q22", "Q24"), gpby= FALSE)
+```
+
 
 
 ```{r}
