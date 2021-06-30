@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Following Andy Field's codes 
 
 ```{r}
-install.packages("car"); install.packages("ggplot2"); install.
+
 packages("mvoutlier"); install.packages("mvnormtest"); install.
 packages("pastecs"); install.packages("reshape"); install.
 packages("WRS", repos="http://R-Forge.R-project.org")
@@ -61,14 +61,121 @@ cov("Q08":"Q24", use = "complete.obs")
 by(PrePostCC[, 3:18], PrePostCC$Group, cov)
 ```
 
-#Data visualization
+#Data visualization (all the below are examples of me trying to visualize my data, but nothing came as I wanted!
 
+I am not sure why this code does not result in a box plot, it only views dashes instead!
 ```{r}
+library(ggpubr)
 ggboxplot(
   PrePost_mean, x = "Question", y = c("PreValue", "Post.Value"), 
   merge = TRUE, palette = "jco"
   )
 ```
+
+```{r}
+ggboxplot(
+  PrePost_mean, x = "Question", y = c("PreValue", "Post.Value"), 
+  merge = TRUE, palette = "jco"
+```
+
+
+```{r}
+ggplot(data = PrePostCC2, aes(x = Question,  y= value) + 
+         geom_freqpoly (aes(colour = Group), binwidth = 500))
+```
+
+```{r}
+ggplot(PrePostCC2, 
+       aes(x = Question, y = value),
+           fill = Group + stat_summary() + 
+  geom_bar(position = "stack"))
+
+```
+
+
+```{r}
+PrePostCC2 %>%
+ggplot(aes(x = Question, y = value, fill=Group, fun.args= 50))
+          stat_summary(fun.data = mean_se, geom = "bar") 
++ geom_boxplot()
+
+```
+
+```{r}
+boxplot(PrePostCC2$Question ~ PrePostCC2$value)
+```
+
+Not sure, why nothing comes out of this! 
+```{r}
+ggplot(PrePostCC2, 
+       aes(x = Question, y = after_stat(value, fill = Group)) 
++ stat_summary(fun.data = mean_se()) 
++  geom_bar(position = "fill")
+```
+
+```{r}
+ggplot(PrePostCC2, aes(Question, value)) + 
+  geom_point() + 
+  geom_point(stat = "summary", fun = "mean", colour = "red", size = 4)
+
+```
+
+```{r}
+ggplot(data = PrePostCC2, mapping = aes(x = Question)) +
+
+geom_freqpoly()
+```
+
+
+```{r}
+ggplot(data = PrePostCC2, mapping = aes(x = Question, y = value)) +
+  geom_boxplot()
+```
+
+It seems that box plots are not the best way to present my data
+
+```{r}
+ggplot(data = PrePostCC2) +
+  geom_boxplot(mapping = aes(x = Question, y = value))
+```
+
+```{r}
+ggplot(data = PrePost_mean) +
+  geom_boxplot(mapping = aes(x = Question, y = PreValue))
+```
+
+
+To visualise the covariation between categorical variables, you’ll need to count the number of observations for each combination. One way to do that is to rely on the built-in geom_count():
+
+Not sure how to differentiate them by group
+```{r}
+ggplot(data = PrePostCC2) +
+  geom_count(mapping = aes(x = Question, y = value))
+```
+
+
+```{r}
+PrePostCC2 %>%
+ ggplot( aes(x=Question, fill=Group)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2", "#404080"))
+```
+ Search on how to set count in ggplots 
+ 
+```{r}
+ ggplot(PrePostCC2, aes(x= Question, y= value, fill= Group)) +
+    geom_boxplot(alpha=0.7) +
+    stat_summary(fun.y=mean, geom="point", shape=20, size=8, color="blue", fill="red") +
+    theme(legend.position="none") +
+    scale_fill_brewer(palette="Set1")
+```
+ 
+
+
+```{r}
+boxplot(PrePostCC2, x= PrePostCC2$Question, y= PrePostCC2$value)
+```
+
 
 Plotting for outliers (based on the box plot above, Q08 & Q22, showed to be outlires, I can specifically look for outliers )
 
@@ -90,23 +197,36 @@ PrePostCC %>%
 PrepostMatrix <- select(PrePost_Complete, - ID, -Group)
 ```
 
-
 #Mutlivariate ouliers: 
 The Mahalanobis distance is generally used to detect multivariate outliers. The distance tells us how far an observation is from the center of the cloud, taking into account the shape (covariance) of the cloud as well.
+
+```{r}
+# Compute distance by groups and filter outliers
+# Use -id to omit the id column in the computation
+PrePostCC %>%
+ group_by(Group) %>%
+ mahalanobis_distance %>%
+ filter(is.outlier == TRUE) %>%
+  as.data.frame()
+```
 
 Nothing was identified using this test..
 
 #Non-parametric analysis
 
 ```{r}
-install.packages("npmv")
-install.packages("nparLD")
 library(npmv)
 ```
 
 
 ```{r}
 nonpartest (Q08 | Q09 | Q10 | Q11 | Q12 | Q13 | Q14 | Q15 | Q16 | Q17  | Q18 | Q19 | Q20 | Q21 | Q22 | Q24 ~ Group, data =PrePostCC, permreps = 1000)
+```
+
+There were some errors in the plots. Will try to run the code again with the complete data set and see if there any changes in the data.
+
+```{r}
+nonpartest (Q08 | Q09 | Q10 | Q11 | Q12 | Q13 | Q14 | Q15 | Q16 | Q17  | Q18 | Q19 | Q20 | Q21 | Q22 | Q24 ~ Group, data =PrePost_Complete, plots = TRUE, permreps = 1000)
 ```
 
 
@@ -137,16 +257,6 @@ PrePostCC %>%
 
 
 
-```{r}
-# Compute distance by groups and filter outliers
-# Use -id to omit the id column in the computation
-PrePostCC %>%
- group_by(Group) %>%
- mahalanobis_distance %>%
- filter(is.outlier == TRUE) %>%
-  as.data.frame()
-```
-
 #Check linearity assumption
 
 The pairwise relationship between the outcome variables should be linear for each group. This can be checked visually by creating a scatter plot matrix using the R function
@@ -156,6 +266,12 @@ library(GGally)
 results <- PrePostCC %>%
   select(Q08:Q24) %>%
   group_by("Group") %>%
+  doo(~ggpairs(.) + theme_bw(), result = "plots")
+results$plots
+```
+
+```{r}
+results2 <- PrePostCC_Wide %>%
   doo(~ggpairs(.) + theme_bw(), result = "plots")
 results$plots
 ```
@@ -190,9 +306,7 @@ PrePostCC %>%
 All the data shows that they are NOT normally distributed. This is expected since the data is binomial. 
 
 
-
 #Identify multicollinearity
-
 
 Cor_mat command allows for a correlation matrix for more than 2 variables
 ```{r}
@@ -313,9 +427,18 @@ FIT
 abline(reg = FIT)
 ```
 
-#Trying out ANOVA
+#Trying out Kruscal-Wallace test
+
+A somewhat simpler test is the Kruskal-Wallace test which is implemented in R in the kruskal.test() function. The x parameter is a continuous (interval/ratio) variable. The g parameter is the categorical variable representing different groups to which the continuous values belong.The null hypothesis with a Kruskal-Wallace test is that all the different groups represented by the samples are very similar.
 
 ```{r}
 PrePostCC2 %>% kruskal_test(value ~ Group)
 ```
+The p value of 1.08e-20, appears to be very minimal, so there is a very low chance that the differences between the means is random. NOTE: This test is run on the long data format, which amplify the sample size to 10912 participants. I am not sue if this affects the test-- check with Michelle. 
 
+#Paired-T test
+
+```{r}
+t.test(PrePostInd$PostScore, PrePostInd$PreScore,, mu = 0, alternative = "two.sided", paired = T, conf.level = 0.99)
+```
+The P-value shows that there is a significant difference between the groups (even when not adjuting for the outliers who scored more than 17)
