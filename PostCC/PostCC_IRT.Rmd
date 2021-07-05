@@ -25,7 +25,7 @@ library(ltm)
 library(ggpubr)
 ```
 
-Recoding values for Q09Post 
+Recoding values for Q09Post (those values were coded by error in the excel sheet, so the values were replaced to numbers. Resotring them again here to avoid recoding in excel).
 
 ```{r}
 PostCC2 <- PostCC %>% mutate(Q09Post = case_when(
@@ -34,18 +34,29 @@ PostCC$Q09post == 4 ~ c("Agree"),
 PostCC$Q09post == 2 ~ c("Disagree")))
 ```
 
-Recoding values for Q14Post 
+Recoding values for Q14Post (Agree14 was coded to differentiate it from the Agree in Q9.)
+
 ```{r}
-PostCC2 <- PostCC2 %>% mutate(Q14Post = case_when(
+PostCC2 <-PostCC2 %>% mutate (Q14PPost = case_when(
 PostCC$Q14post == 3 ~ c("Not Sure"),
-PostCC$Q14post == 4 ~ c("Agree"),
-PostCC$Q14post == 2 ~ c("Disagree")))
+PostCC$Q14post == 4 ~ c("Agree14"),
+PostCC$Q14post == 2 ~ c("Disagree14")))
 ```
+
+```{r}
+PostCC2 %>% 
+  mutate(Q144Post = case_when(PostCC$Q14post == 3 ~ c("Not Sure"),
+PostCC$Q14post == 4 ~ c("Agree14"),
+PostCC$Q14post == 2 ~ c("Disagree14")))
+
+```
+
 
 Reading the modified file
 ```{r}
 PostCC <- read.csv("PostCC.csv")
 ```
+
 
 Selecting the relevant coloumns 
 

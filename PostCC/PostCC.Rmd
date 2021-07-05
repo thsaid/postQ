@@ -406,6 +406,7 @@ write.csv(PostCC_Frequency, "PostCC_Frequencies.csv")
 scoring <- read.csv("Scoring_CC2_copy.csv")
 ```
 
+
 ```{r}
 PostCCscores <- inner_join(PostCC_long, scoring, c("Response"))
 ```
