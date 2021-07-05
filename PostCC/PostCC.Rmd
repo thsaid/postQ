@@ -486,8 +486,30 @@ IndPreCC <- read.csv("Individual_PreCCscores.csv")
 hist(PrePostInd$PostScore)
 hist(PrePostInd$PreScore)
 ```
+Testing the normality of the disrtibution
 
-Recheck the data, since the max. pre score is 25, while the max post score is 16. There is something not correct!
+```{r}
+library(mvnormtest)
+library(MVN)
+
+```
+
+```{r}
+PrePostInd %>%
+mvn(PostScore, mvnTest = c("mardia") ,univariatePlot = ("qq"))
+```
+
+Something wrong with the code,.will have to try to quit and restart the session again.
+
+
+```{r}
+PrePostInd %>%
+shapiro_test(PostScore, PreScore )
+```
+The shapiro test shows that the data is normally disribtubed, because the p value is very low. 
+
+
+#Note: Recheck the data, since the max. pre score is 25, while the max post score is 16. There is something not correct!
 
 
 ```{r}
@@ -513,16 +535,24 @@ write.csv(PrePostInd, "PrePostCCInd.csv")
 PrePostInd_long <- gather(PrePostInd, Time, Score, PreScore, PostScore)
 ```
 
+```{r}
+plot(PrePostInd$ID, y= c(PrePostInd$PostScore, PrePostInd$PreScore))
+```
+
 #Comparision of individual scores (pre/post)
 ```{r}
-ggplot(PrePostInd_long, aes(fill=Time, y=Score, x=ID)) + 
-    geom_col(position="dodge", stat = "identity")
+boxplot(PrePostInd$PreScore, PrePostInd$PostScore)
+main="Comparing Pre and Post means for total scores"
+legend("topleft",
+c("Pre","Post"))
 ```
-
 
 ```{r}
-PreCCscores <- rename(PreCCscores,PreValue= PostValue ) 
+plot( PrePostInd$PreScore,PrePostInd$PostScore,)
+abline(a= 0, b=1)
 ```
+
+the points above the line shows the improvement post the intervention, while those below the line show no improvement. 
 
 Joining the pre and post again after leaving the Questions name as is
 

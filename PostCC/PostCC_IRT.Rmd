@@ -50,8 +50,9 @@ PostCC <- read.csv("PostCC.csv")
 Selecting the relevant coloumns 
 
 ```{r}
-PostCC <-select(PostCC, ID:Q14Post, -Q09post, -Q14post)
+PostCC <-select(PostCC2, ID:Q14Post, -Q09post, -Q14post)
 ```
+
 
 ```{r}
 spread(PostCCscores, Question, value)
@@ -63,7 +64,7 @@ PostCCscoresNew <- select(PostCCscores, - Response)
 ```
 
 ```{r}
-PostCC_Wide <- PostCCscoresNew  %>%
+PostCC_Wide <- PostCCscores  %>%
 pivot_wider(names_from = Question, values_from = value)
 ```
 
@@ -101,19 +102,35 @@ PreCC_Wide <- read.csv("PreCCWide.csv")
 
 #Merging data from pre and post 
 ```{r}
-PrePostCC_Wide <- merge(PreCC_Wide,PostCC_Wide)
+PrePostCC_Wide2 <- merge(PreCC_Wide,PostCC_Wide)
 ```
 
 For analysis, removng ID and X
 
 ```{r}
-
+PrePostCC_Wide <- dplyr:: select(PrePostCC_Wide, -ID, -X)
 ```
+
+```{r}
+write.csv(CompDescriptives, "CompAnalysisCC.csv")
+```
+
 
 ```{r}
 CompDescriptives <- describe(PrePostCC_Wide)
 ```
 
+
 Doing GPCM for the whole set of questions to see the difference between the two scores, then will filter out the polynomial items
+
+```{r}
+PrePostGPCM <- gpcm(PrePostCC_Wide,constraint = "1PL" ,IRT.param = TRUE)
+PrePostGPCM
+```
+
+
+```{r}
+install.packages("robmed")
+```
 
 
