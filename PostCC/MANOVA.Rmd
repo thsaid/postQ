@@ -2,7 +2,9 @@
 title: "MANOVA"
 author: "Tamer Said"
 date: "24/06/2021"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -17,7 +19,7 @@ packages("mvoutlier"); install.packages("mvnormtest"); install.
 packages("pastecs"); install.packages("reshape"); install.
 packages("WRS", repos="http://R-Forge.R-project.org")
 library(car); library(ggplot2); library(MASS); library(mvoutlier);
-library(mvnormtest); library(pastecs); library(reshape); library(WRS)
+library(mvnormtest); library(pastecs); library(reshape); 
 library(tidyverse)
 library(ggpubr)
 library(rstatix)
@@ -219,8 +221,9 @@ library(npmv)
 ```
 
 
-```{r}
+```{r non-partest}
 nonpartest (Q08 | Q09 | Q10 | Q11 | Q12 | Q13 | Q14 | Q15 | Q16 | Q17  | Q18 | Q19 | Q20 | Q21 | Q22 | Q24 ~ Group, data =PrePostCC, permreps = 1000)
+
 ```
 
 There were some errors in the plots. Will try to run the code again with the complete data set and see if there any changes in the data.
@@ -294,16 +297,7 @@ The same can be done using QQ plots (in this case they are meaningless since the
 
 #Check univariate normality assumption: Shapiro test
 
-The normality assumption can be checked by computing Shapiro-Wilk test for each outcome variable at each level of the grouping variable. If the data is normally distributed, the p-value should be greater than 0.05.
 
-```{r}
-PrePostCC %>%
-  group_by(Group) %>%
-  shapiro_test(Q08, Q09, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22, Q24) %>%
-  arrange(variable)
-```
-
-All the data shows that they are NOT normally distributed. This is expected since the data is binomial. 
 
 
 #Identify multicollinearity
@@ -359,7 +353,9 @@ ggplot( aes(x=Question, y=value, fill=Group)) +
 ```
 
 
+
 #MANOVA model for Questions
+
 
 ```{r}
 #newModel<-manova(outcome ~ predictor(s), data = dataFrame, na.action = na.exclude()
@@ -369,6 +365,32 @@ PrePostModel<-manova(Question ~ Group, data = PrePostCC2, na.action = na.exclude
 
 Error from code: NAs introduced by coercionError in lm.fit(x, y, offset = offset, singular.ok = singular.ok, ...) : 
   NA/NaN/Inf in 'y'
+
+#Trying out MANOVAs for the Questions mean scores 
+
+I'll name the predictor dependent variables first since something does not work well with MANOVA
+
+```{r}
+Values <- cbind(PrePost_mean$PreValue, PrePost_mean$Post.Value)
+```
+
+```{r}
+manova1 <-manova (Values ~ Question, data = PrePost_mean)
+summary(manova1)
+```
+
+```{r}
+PrePostmeanModel <-manova (cbind(PreValue, Post.Value) ~ as.factor( Question), data = PrePost_mean, na.action = na.exclude)
+PrePostmeanModel
+```
+
+```{r}
+Values = as.matrix(Values)
+```
+
+
+
+
 
 
 #Mutlivariate ouliers: 
@@ -398,7 +420,7 @@ PrePostCC %>%
 Question <- cbind("Q08":"Q24")
 ```
 
-MANOVA did not work since the values of the questions are not equal, this could be due to the missing values.Will try deleting the missing values and trying out again
+MANOVA did not work since the values of the questions are not equal, this could be due to the missing values. Will try deleting the missing values and trying out again
 
 ```{r}
 PrePost_Complete <- PrePostCC[complete.cases(PrePostCC), ]
@@ -407,7 +429,7 @@ PrePost_Complete <- PrePostCC[complete.cases(PrePostCC), ]
 436 cases remained from a total of 682 (for both groups)
 
 ```{r}
-Manova_model<-manova(cbind(Q08:Q24) ~ Group, data = PrePost_Complete, na.action = na.exclude)
+Manova_model<-manova(cbind(Q08,Q09, Q10, Q11, Q12, Q13, Q14, Q15, Q16,Q17, Q18, Q19, Q20, Q21, Q22, Q23,Q24) ~ Group, data = PrePost_Complete, na.action = na.exclude)
 ```
 
 
