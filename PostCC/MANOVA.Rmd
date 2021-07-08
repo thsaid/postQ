@@ -214,6 +214,7 @@ PrePostCC %>%
 
 Nothing was identified using this test..
 
+
 #Non-parametric analysis
 
 ```{r}
@@ -352,6 +353,9 @@ ggplot( aes(x=Question, y=value, fill=Group)) +
     geom_violin()
 ```
 
+```{r}
+write.csv()
+```
 
 
 #MANOVA model for Questions
@@ -360,13 +364,11 @@ ggplot( aes(x=Question, y=value, fill=Group)) +
 ```{r}
 #newModel<-manova(outcome ~ predictor(s), data = dataFrame, na.action = na.exclude()
 
-PrePostModel<-manova(Question ~ Group, data = PrePostCC2, na.action = na.exclude)   
+PrePostModel<-manova(value ~ Group + Question, data = PrePostCC2, na.action = na.exclude)
 ```
 
-Error from code: NAs introduced by coercionError in lm.fit(x, y, offset = offset, singular.ok = singular.ok, ...) : 
-  NA/NaN/Inf in 'y'
 
-#Trying out MANOVAs for the Questions mean scores 
+#Trying out MANOVAs for the Questions mean scores (Michelle suggested)
 
 I'll name the predictor dependent variables first since something does not work well with MANOVA
 
@@ -387,10 +389,6 @@ PrePostmeanModel
 ```{r}
 Values = as.matrix(Values)
 ```
-
-
-
-
 
 
 #Mutlivariate ouliers: 
@@ -429,7 +427,7 @@ PrePost_Complete <- PrePostCC[complete.cases(PrePostCC), ]
 436 cases remained from a total of 682 (for both groups)
 
 ```{r}
-Manova_model<-manova(cbind(Q08,Q09, Q10, Q11, Q12, Q13, Q14, Q15, Q16,Q17, Q18, Q19, Q20, Q21, Q22, Q23,Q24) ~ Group, data = PrePost_Complete, na.action = na.exclude)
+Manova_model<-manova(cbind(Q08,Q09, Q10, Q11, Q12, Q13, Q14, Q15, Q16,Q17, Q18, Q19, Q20, Q21, Q22, Q23, Q24) ~ Group, data = PrePost_Complete, na.action = na.exclude)
 ```
 
 
@@ -437,10 +435,6 @@ Manova_model<-manova(cbind(Q08,Q09, Q10, Q11, Q12, Q13, Q14, Q15, Q16,Q17, Q18, 
 PrePost_mean <- read.csv("PrePostCC_mean.csv")
 ```
 
-
-```{r}
-meanModel <- manova (Question ~ cbind(PreValue, Post.Value), data = PrePost_mean,na.action = na.exclude)
-```
 
 
 ```{r}
@@ -464,3 +458,96 @@ The p value of 1.08e-20, appears to be very minimal, so there is a very low chan
 t.test(PrePostInd$PostScore, PrePostInd$PreScore,, mu = 0, alternative = "two.sided", paired = T, conf.level = 0.99)
 ```
 The P-value shows that there is a significant difference between the groups (even when not adjuting for the outliers who scored more than 17)
+
+#8/7/2021: After Michelle's supervision, I learned that I need to define NAs when importing the data. I also need to change the dep. variables & indepenedent variables as factors 
+
+Renaming the files, before saving
+
+```{r}
+PrepostCC_long <- PrePostCC2 %>%
+  rename(Time = Group, score = value)
+```
+
+I will save the file first, then reload it 
+
+
+```{r}
+write.csv(PrepostCC_long, "PrePostCC_long.csv")
+```
+
+Importing the data again, while identifying NAs
+```{r}
+PrepostCC_long <- read.csv("PrePostCC_long.csv",header = T, na.strings=c(""," ","NA"))
+```
+
+```{r}
+PrepostCC_long <- select(PrepostCC_long, -X)
+```
+
+Mutating coloumns as.factors
+```{r}
+PrepostCC_long <-
+PrepostCC_long %>%
+  mutate(Time = as.factor(Time))  %>%
+  mutate(Question = as.factor(Question))
+```
+
+Attempting MANOVA trying MANOVA.RM package (https://cran.r-project.org/web/packages/MANOVA.RM/vignettes/Introduction_to_MANOVA.RM.html)
+
+```{r}
+library(MANOVA.RM)
+```
+
+THis command requries no missing values, so I wll create a new version with no missing values
+```{r}
+PrePostCC_longComp <- drop_na(PrepostCC_long)
+```
+Around 600 values were dropped
+
+```{r}
+PrePostMANOVA <- MANOVA(Question * Time ~ score, 
+                     data = PrePostCC_longComp, subject = "ID", resampling = "paramBS", iter = 1000,  alpha = 0.01, seed = 987)
+```
+
+Error: Error in A %*% x : non-conformable arguments
+
+Will try the old package again, finally it worked. I had to re-arrange the order of my variables
+
+```{r}
+Manovatrial <-manova(score ~ Time + Question, , data = PrepostCC_long, na.action = na.exclude)
+summary(Manovatrial)
+```
+
+It seems that this type of MANOVA works on wide data, there are spaces for multiple variables 
+
+I will work on saving the df and loading it again to ensure nothing is wrong with data framews
+
+```{r}
+PrePostCC <- PrePostCC %>%
+  mutate(Group = as.factor(Group))
+```
+
+```{r}
+Manova2 <-manova(cbind(Q08, Q09, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22, Q24) ~ Group, data = PrePostCC, na.action = na.exclude)
+summary(Manova2)
+```
+The F values is 5.314e-06, which shows that the difference is significant.
+
+Running the 4 tests
+```{r}
+summary(Manova2, intercept = TRUE)
+summary(Manova2, intercept = TRUE, test = "Wilks")
+summary(Manova2, intercept = TRUE, test = "Hotelling")
+summary(Manova2, intercept = TRUE, test = "Roy")
+```
+
+
+```{r}
+write.csv(PrePostCC, "PrePostCC_20210807.csv")
+```
+
+
+
+Let's try it in wide format
+
+Error in manova(score ~ Time + Question, data = PrePostCC_longComp, na.action = na.exclude) : need multiple responses
