@@ -319,6 +319,7 @@ library(mirt)
 library(ltm)
 library(ggpubr)
 library(SmartEDA)
+library(car)
 ```
 
 ```{r}
@@ -414,11 +415,15 @@ PostCCscores <- inner_join(PostCC_long, scoring, c("Response"))
 Exporting the PostCC scores
 
 ```{r}
-write.csv(PostCCscores2, "PostCCscores.csv")
+write.csv(PostCCscores, "PostCCscores_20210705.csv")
 ```
 
 ```{r}
 PreCCscores <- read.csv("PreCCscores_Complete.csv")
+```
+
+```{r}
+hist(PostCC_Wide)
 ```
 
 
@@ -450,7 +455,7 @@ PostCCscores2 <- inner_join(PostCC_long2, scoring2, c("Response"))
 ```
 
 ```{r}
-PostCCscoresleft <- left_join(PostCC_long, scoring2, c("Response"))
+PostCCscoresleft <- left_join(PostCC_long, scoring, c("Response"))
 ```
 
 ```{r}
@@ -480,6 +485,10 @@ Indvidual_PostCCScores <- rename(Indvidual_PostCCScores,
 ```
 
 ```{r}
+hist(Indvidual_PostCCScores$PostScore)
+```
+
+```{r}
 IndPreCC <- read.csv("Individual_PreCCscores.csv")
 ```
 
@@ -487,7 +496,8 @@ IndPreCC <- read.csv("Individual_PreCCscores.csv")
 hist(PrePostInd$PostScore)
 hist(PrePostInd$PreScore)
 ```
-Testing the normality of the disrtibution
+
+#Testing the normality of the disrtibution
 
 ```{r}
 library(mvnormtest)
@@ -495,12 +505,16 @@ library(MVN)
 
 ```
 
+
 ```{r}
-PrePostInd %>%
-mvn(PostScore, mvnTest = c("mardia") ,univariatePlot = ("qq"))
+mvn(PrePostInd, subset = "PostScore", mvnTest = c("mardia"))
 ```
 
 Something wrong with the code,.will have to try to quit and restart the session again.
+
+```{r}
+library(rstatix)
+```
 
 
 ```{r}
@@ -508,6 +522,42 @@ PrePostInd %>%
 shapiro_test(PostScore, PreScore )
 ```
 The shapiro test shows that the data is normally disribtubed, because the p value is very low. 
+PostScore	0.9405544	2.137345e-10		
+PreScore	0.9467932	1.102723e-09	
+
+#qq plots
+
+```{r}
+library(ggpubr)
+ggqqplot(PrePostInd$PostScore)
+ggqqplot(PrePostInd$PreScore)
+```
+
+
+Assessing normaility of the indivual question scores 
+
+```{r}
+PrePost_mean %>%
+shapiro_test(PreValue, Post.Value)
+```
+
+```{r}
+hist(PrePost_mean$PreValue)
+hist(PrePost_mean$Post.Value)
+```
+
+It appears that the prescores of the questions are not normally distributed, however, the postscores are normally distributed
+
+
+```{r}
+mshapiro.test(PrePostInd$PostScore, PrePostInd$PreScore)
+```
+
+Chekcing normality of mean scores
+
+```{r}
+Prepost
+```
 
 
 #Note: Recheck the data, since the max. pre score is 25, while the max post score is 16. There is something not correct!
@@ -548,12 +598,14 @@ legend("topleft",
 c("Pre","Post"))
 ```
 
+#Note that there is a discprenacy between pre and post. The pre receive 0.5 for "Not sure", while post receive 0. Make sure to code the data similarly for both tests
+
 ```{r}
 plot( PrePostInd$PreScore,PrePostInd$PostScore,)
 abline(a= 0, b=1)
 ```
 
-the points above the line shows the improvement post the intervention, while those below the line show no improvement. 
+The points above the line shows the improvement post the intervention, while those below the line show no improvement. 
 
 Joining the pre and post again after leaving the Questions name as is
 
@@ -616,7 +668,6 @@ Frequency analysis (This works only one wide data not long)
 ```{r}
 PrePostCC_Frequency <- ExpCustomStat(PrePostCC_Wide,Cvar = c("Q08","Q9","Q10", "Q11", "Q12", "Q13", "Q14", "Q15", "Q16", "Q17", "Q18", "Q19", "Q20", "Q21", "Q22", "Q24"), gpby= FALSE)
 ```
-
 
 
 ```{r}
