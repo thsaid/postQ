@@ -12,8 +12,9 @@ To load the library
 library(tidyverse)
 ```
 
+
 ```{r}
-postQ <- read.csv("Post Questionnaire.csv")
+PostQ <- read.csv("Post Questionnaire_20200625.csv")
 ```
 
 
@@ -326,254 +327,79 @@ library(car)
 library(tidyverse)
 ```
 
+#12/7/2021
+Loadig the latest versio of the data
 ```{r}
-PostQ <- read.csv("postQ_unique_complete.csv")
+PostQ <- read.csv("PostQ_filteredComplete_12_7_2021.csv", header = T, na.strings=c(""," ","NA"))
 ```
+
+```{r}
+filter(PostQ, duplicated(ID))
+```
+This shows that none of the IDs is duplciated. 
 
 ```{r}
 PostCC <- select(PostQ, ID, Q35:Q51)
 ```
 
-```{r}
-write.csv(PostCC, "PostCC.csv")
-```
-
-
-coonverting IDs to factors
-
-```{r}
-PostCC$ID <- factor(PostCC$ID)
-```
-
-#Replacing blank values with "NAs"
-I discovered some blank responses, and I need to replace them by NAs (since the system recongize them as not blank or not missing)
+#Recoding the values in the PostCC (from numbers to characters) to prepare for the scorig
+Strogly Agree = 5
+Agree = 4
+Not Sure = 3
+Disagree = 2
+Strongly Disagree = 1
 
 ```{r}
-PostCC <- read.csv("PostCC.csv",header = T, na.strings=c(""," ","NA"))
-```
-
-```{r}
-write.csv(PostCC, "PostCC.csv")
-```
-
-
-Replacing NAs (for now, I will replace them, later I can do multiple imputations). I noticed that Q23 has only 20 responses. I will deselect it for now. Q7 is a qualitative question, so it will be deseclted for now.
-
-#Renaming variables: I need to rename the questions to the same names as the pre in order to refer to do the comparative analysis.
-
-```{r}
- PostCC <- rename(PostCC, Q08post=Q35, Q09post= Q36, Q10post= Q37, Q11post= Q38, Q12post = Q39, Q13post= Q40, Q14post = Q41, Q15post = Q42, Q16post= Q43, Q17post = Q44, Q18post = Q45, Q19post = Q46, Q20post = Q47, Q21post = Q48, Q22post = Q49, Q24post = Q51)
-```
-
-
-
-```{r}
-PostCC <- select (PostCC, ID:Q24post)
-```
-
-
-```{r}
-write.csv(PostCC, "PostCC.csv")
-```
-
-Arrange coloumns alphabetically
-```{r}
-PostCC <- PostCC[,order(colnames(PostCC))]
+recode_if <- function(x, condition, ...) {
+  if_else(condition, recode(x, ...), x)
+}
 
 ```
 
-Converting data to long format
+Note you have to do all the recodings in one command, otherwise, the last code will replace the older ones. 
+```{r}
+PostCC_filtered <-PostCC %>% 
+  mutate(
+    Q36 = recode_if(Q36, Q36 == "2", "2" = "Disagree"), Q36 = recode_if(Q36, Q36 == "4", "4" = "Agree"),Q36 = recode_if(Q36, Q36 == "3", "3" = "Not Sure"), Q41 = recode_if(Q41, Q41 == "2", "2" = "Disagree"), Q41 = recode_if(Q41, Q41 == "4", "4" = "Agree"),Q41 = recode_if(Q41, Q41 == "3", "3" = "Not Sure"), Q47 = recode_if(Q47, Q47 == "I am 3", "I am 3" = "I am not sure"),Q48 = recode_if(Q48, Q48 == "I am 3", "I am 3" = "I am not sure"))
+```
+
+#Recodig Q14 to avoid confusion with other 
 
 ```{r}
-PostCC_long <- gather(PostCC, Question, Response, Q08post:Q24post, factor_key=TRUE)
+PostCC_filtered <-PostCC_filtered %>% 
+  mutate(
+Q14post = recode_if(Q14post, Q14post == "Disagree", "Disagree" = "Disagree14"),Q14post = recode_if(Q14post, Q14post == "Agree", "Agree" = "Agree14"))
 ```
 
 ```{r}
-PostCC_long %>%
-select(ID, Question, Response)
-```
-#Move this down after converting to wide format
-
-Descriptive analysis: Frequency analysis
-```{r}
-PostCC_Frequency <- ExpCustomStat(PostCC,Cvar = c("Q08post","Q09post","Q10post", "Q11post", "Q12post", "Q13post", "Q14post", "Q15post", "Q16post", "Q17post", "Q18post", "Q19post", "Q20post", "Q21post", "Q22post", "Q24post"), gpby= FALSE)
+write.csv(PostCC_filtered,"PostCCfilteredComplete_12_7_2021.csv")
 ```
 
+Saving Individual postscores
 ```{r}
-write.csv(PostCC_Frequency, "PostCC_Frequencies.csv")
+PostCC_Individual <- select(PostQ, ID,SC0)
+PostCC_Individual<- PostCC_Individual %>%
+  rename(PostScore = SC0) 
 ```
 
 ```{r}
-scoring <- read.csv("Scoring_CC2_copy.csv")
-```
-
-
-```{r}
-PostCCscores <- inner_join(PostCC_long, scoring, c("Response"))
-```
-
-Exporting the PostCC scores
-
-```{r}
-write.csv(PostCCscores, "PostCCscores_20210705.csv")
+write.csv(PostCC_Individual, "PostCC_Individual_12_7_2021.csv")
 ```
 
 ```{r}
-PreCCscores <- read.csv("PreCCscores_Complete.csv")
+hist(PostCC_Individual$PostScore)
 ```
 
 ```{r}
-hist(PostCC_Wide)
-```
-
-
-```{r}
-
-PreCCscores <- dplyr:: select (PreCCscores, ID, Question:value) %>%
-rename(PreValue = value)
-```
-
-```{r}
-
-PostCCscores <- dplyr:: select (PostCCscores, ID, Question:value) %>%
-rename(PostValue = value)
-```
-
-#Joining the pre and post tables
-
-
-```{r}
-PostCC2 <- rename(PostCC2, Q08=Q35, Q09= Q36, Q10= Q37, Q11= Q38, Q12 = Q39, Q13= Q40, Q14 = Q41, Q15 = Q42, Q16= Q43, Q17 = Q44, Q18 = Q45, Q19 = Q46, Q20 = Q47, Q21 = Q48, Q22= Q49, Q24 = Q51)
-```
-
-```{r}
-PostCC_long2 <- gather(PostCC2, Question, Response, Q08:Q24, factor_key=TRUE)
-```
-
-```{r}
-PostCCscores2 <- inner_join(PostCC_long2, scoring2, c("Response"))
-```
-
-```{r}
-PostCCscoresleft <- left_join(PostCC_long, scoring, c("Response"))
-```
-
-```{r}
-PostCCscores2 <- PostCCscores2 %>% 
-  rename(PostValue= value) %>% 
-  select(ID:PostValue)
-```
-
-```{r}
-write.csv(PostCCscores, "PostCCscores.csv")
-```
-
-```{r}
-write.csv(PostCCscores_left, "PostCCscoresNA.csv")
-```
-
-Individual scores
-
-```{r}
-Indvidual_PostCCScores <- group_by(PostCCscores,ID) %>% 
-             summarise(Score = sum(value))
-```
-
-```{r}
-Indvidual_PostCCScores <- rename(Indvidual_PostCCScores,
-  PostScore = "Score")
-```
-
-```{r}
-hist(Indvidual_PostCCScores$PostScore)
-```
-
-```{r}
-IndPreCC <- read.csv("Individual_PreCCscores.csv")
-```
-
-```{r}
-hist(PrePostInd$PostScore)
-hist(PrePostInd$PreScore)
-```
-
-#Testing the normality of the disrtibution
-
-```{r}
-library(mvnormtest)
-library(MVN)
-
-```
-
-
-```{r}
-mvn(PrePostInd, subset = "PostScore", mvnTest = c("mardia"))
-```
-
-Something wrong with the code,.will have to try to quit and restart the session again.
-
-```{r}
-library(rstatix)
-```
-
-
-```{r}
-PrePostInd %>%
-shapiro_test(PostScore, PreScore )
-```
-The shapiro test shows that the data is normally disribtubed, because the p value is very low. 
-PostScore	0.9405544	2.137345e-10		
-PreScore	0.9467932	1.102723e-09	
-
-#qq plots
-
-```{r}
-library(ggpubr)
-ggqqplot(PrePostInd$PostScore)
-ggqqplot(PrePostInd$PreScore)
-```
-
-
-Assessing normaility of the indivual question scores 
-
-```{r}
-PrePost_mean %>%
-shapiro_test(PreValue, Post.Value)
-```
-
-```{r}
-hist(PrePost_mean$PreValue)
-hist(PrePost_mean$Post.Value)
-```
-
-It appears that the prescores of the questions are not normally distributed, however, the postscores are normally distributed
-
-
-```{r}
-mshapiro.test(PrePostInd$PostScore, PrePostInd$PreScore)
-```
-
-Chekcing normality of mean scores
-
-```{r}
-Prepost
-```
-
-
-#Note: Recheck the data, since the max. pre score is 25, while the max post score is 16. There is something not correct!
-
-
-```{r}
-ggplot(PrePostlong, aes(fill=Time, y=Score, x=Question)) + 
-    geom_col(position="dodge", stat = "identity")
+PreCC_Individuals <- read.csv("PreCC_Individuals_12_7_2021.csv")
 ```
 
 #Joining both tables to compare the scores of individuals
 
 ```{r}
-PrePostInd <- inner_join(Indvidual_PostCCScores, IndPreCC, c("ID"))
+PrePostInd <- inner_join(PostCC_Individual, PreCC_Individuals, c("ID"))
 ```
-
+365 observationns are retained
 ```{r}
 PrePostInd <- select(PrePostInd, -X)
 ```
@@ -606,6 +432,185 @@ abline(a= 0, b=1)
 ```
 
 The points above the line shows the improvement post the intervention, while those below the line show no improvement. 
+
+
+```{r}
+library(mvnormtest)
+library(MVN)
+
+```
+
+
+```{r}
+mvn(PrePostInd, subset = "PostScore", mvnTest = c("mardia"))
+```
+
+Something wrong with the code,.will have to try to quit and restart the session again.
+
+```{r}
+library(rstatix)
+```
+
+
+```{r}
+PrePostInd %>%
+shapiro_test(PostScore, PreScore )
+```
+The shapiro test shows that the data is NOT normally disribtubed, because the p value is very low. 
+PostScore	0.9405544	2.137345e-10		
+PreScore	0.9467932	1.102723e-09	
+
+#qq plots
+
+```{r}
+library(ggpubr)
+ggqqplot(PrePostInd$PostScore)
+ggqqplot(PrePostInd$PreScore)
+```
+
+
+Assessing normaility of the indivual question scores 
+
+```{r}
+PrePost_mean %>%
+shapiro_test(PreValue, Post.Value)
+```
+
+```{r}
+hist(PrePost_mean$PreValue)
+hist(PrePost_mean$Post.Value)
+```
+
+It appears that the prescores of the questions are not normally distributed, however, the postscores are normally distributed
+
+
+```{r}
+mshapiro.test(PrePostInd$PostScore, PrePostInd$PreScore)
+```
+
+
+Converting IDs to factors
+
+```{r}
+PostCC_filtered$ID <- factor(PostCC_filtered$ID)
+```
+
+#Replacing blank values with "NAs"
+I discovered some blank responses, and I need to replace them by NAs (since the system recongize them as not blank or not missing)
+
+```{r}
+PostCC <- read.csv("PostCC.csv",header = T, na.strings=c(""," ","NA"))
+```
+
+```{r}
+write.csv(PostCC, "PostCC.csv")
+```
+
+
+Replacing NAs (for now, I will replace them, later I can do multiple imputations). I noticed that Q23 has only 20 responses. I will deselect it for now. Q7 is a qualitative question, so it will be deseclted for now.
+
+#Renaming variables: I need to rename the questions to the same names as the pre in order to refer to do the comparative analysis.
+
+```{r}
+ PostCC_filtered <- rename(PostCC_filtered, Q08post=Q35, Q09post= Q36, Q10post= Q37, Q11post= Q38, Q12post = Q39, Q13post= Q40, Q14post = Q41, Q15post = Q42, Q16post= Q43, Q17post = Q44, Q18post = Q45, Q19post = Q46, Q20post = Q47, Q21post = Q48, Q22post = Q49, Q24post = Q51)
+```
+
+
+```{r}
+write.csv(PostCC, "PostCC.csv")
+```
+
+Arrange coloumns alphabetically
+```{r}
+PostCC <- PostCC[,order(colnames(PostCC))]
+
+```
+
+Converting data to long format
+
+```{r}
+PostCC_long <- gather(PostCC_filtered, Question, Response, Q08post:Q24post, factor_key=TRUE)
+```
+
+```{r}
+PostCC_long %>%
+select(ID, Question, Response)
+```
+
+```{r}
+scoring <- read.csv("Scoring_CC2_copy.csv")
+```
+
+
+```{r}
+PostCCscores <- inner_join(PostCC_long, scoring, c("Response"))
+```
+
+Exporting the PostCC scores
+
+```{r}
+write.csv(PostCCscores, "PostCCscores_20210712.csv")
+```
+
+```{r}
+PreCCscores <- read.csv("PreCC_Scores_12_7_2021.csv")
+```
+
+#Move this down after converting to wide format
+
+Descriptive analysis: Frequency analysis
+```{r}
+PostCC_Frequency <- ExpCustomStat(PostCC,Cvar = c("Q08post","Q09post","Q10post", "Q11post", "Q12post", "Q13post", "Q14post", "Q15post", "Q16post", "Q17post", "Q18post", "Q19post", "Q20post", "Q21post", "Q22post", "Q24post"), gpby= FALSE)
+```
+
+```{r}
+write.csv(PostCC_Frequency, "PostCC_Frequencies.csv")
+```
+
+
+```{r}
+
+PreCCscores <- dplyr:: select (PreCCscores, ID, Question:value) %>%
+rename(PreValue = value)
+```
+
+```{r}
+
+PostCCscores <- dplyr:: select (PostCCscores, ID, Question:value) %>%
+rename(PostValue = value)
+```
+
+#Joining the pre and post tables
+
+Renaming the variables to join both tables
+```{r}
+PostCC_renamed <- rename(PostCC_filtered, Q08=Q35, Q09= Q36, Q10= Q37, Q11= Q38, Q12 = Q39, Q13= Q40, Q14 = Q41, Q15 = Q42, Q16= Q43, Q17 = Q44, Q18 = Q45, Q19 = Q46, Q20 = Q47, Q21 = Q48, Q22= Q49, Q24 = Q51)
+```
+
+
+```{r}
+PostCC_long2 <- gather(PostCC, Question, Response, Q08:Q24, factor_key=TRUE)
+```
+
+
+#Testing the normality of the disrtibution
+
+
+Chekcing normality of mean scores
+
+```{r}
+Prepost
+```
+
+
+#Note: Recheck the data, since the max. pre score is 25, while the max post score is 16. There is something not correct!
+
+
+```{r}
+ggplot(PrePostlong, aes(fill=Time, y=Score, x=Question)) + 
+    geom_col(position="dodge", stat = "identity")
+```
+
 
 Joining the pre and post again after leaving the Questions name as is
 
