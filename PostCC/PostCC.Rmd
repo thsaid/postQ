@@ -399,13 +399,13 @@ PreCC_Individuals <- read.csv("PreCC_Individuals_12_7_2021.csv")
 ```{r}
 PrePostInd <- inner_join(PostCC_Individual, PreCC_Individuals, c("ID"))
 ```
-365 observationns are retained
+365 observationns are retained from this 
 ```{r}
 PrePostInd <- select(PrePostInd, -X)
 ```
 
 ```{r}
-write.csv(PrePostInd, "PrePostCCInd.csv")
+write.csv(PrePostInd, "PrePostCCInd_12_7_2021.csv")
 ```
 
 ```{r}
@@ -419,12 +419,10 @@ plot(PrePostInd$ID, y= c(PrePostInd$PostScore, PrePostInd$PreScore))
 #Comparision of individual scores (pre/post)
 ```{r}
 boxplot(PrePostInd$PreScore, PrePostInd$PostScore)
-main="Comparing Pre and Post means for total scores"
-legend("topleft",
-c("Pre","Post"))
+main="Comparing Pre and Post means for total scores"))
 ```
 
-#Note that there is a discprenacy between pre and post. The pre receive 0.5 for "Not sure", while post receive 0. Make sure to code the data similarly for both tests
+#Note that there is a discprenacy between pre and post. The pre receive 0.5 for "Not sure", while post receive 0. Make sure to code the data similarly for both tests (solved on 12/7/2021)
 
 ```{r}
 plot( PrePostInd$PreScore,PrePostInd$PostScore,)
@@ -469,7 +467,8 @@ ggqqplot(PrePostInd$PreScore)
 ```
 
 
-Assessing normaility of the indivual question scores 
+
+#Assessing normaility of the indivual question scores 
 
 ```{r}
 PrePost_mean %>%
@@ -483,17 +482,6 @@ hist(PrePost_mean$Post.Value)
 
 It appears that the prescores of the questions are not normally distributed, however, the postscores are normally distributed
 
-
-```{r}
-mshapiro.test(PrePostInd$PostScore, PrePostInd$PreScore)
-```
-
-
-Converting IDs to factors
-
-```{r}
-PostCC_filtered$ID <- factor(PostCC_filtered$ID)
-```
 
 #Replacing blank values with "NAs"
 I discovered some blank responses, and I need to replace them by NAs (since the system recongize them as not blank or not missing)
@@ -636,19 +624,56 @@ PrePostCC<- dplyr:: select(PrePostCC, - "Response.x", - "Response.y")
 Removing respnses from PostCCScores
 
 ```{r}
- PostCCscores<- select(PostCCscores, -Response, -X)
+ PostCCscores_response<- select(PostCCscores, -Response)
 ```
 
 
 ```{r}
-PostCC_Wide <- PostCCscores  %>%
-pivot_wider(names_from = Question, values_from = value)
+PostCC_Wide <- PostCCscores_response  %>%
+pivot_wider(names_from = Question, values_from = PostValue)
 ```
 
 ```{r}
-write.csv(PostCC_Wide, "PostCCWide.csv")
+write.csv(PostCC_Wide, "PostCCWide_12_7_2021.csv")
 ```
 
+loading preCC wide
+
+```{r}
+PreCC_Wide <- read.csv("PreCC_Wide_12_7_2021.csv")
+```
+
+Merging both wide versions
+
+```{r}
+PrePostWide <- merge(PostCC_Wide, PreCC_Wide, by= "ID")
+```
+
+Arrange coloumns alphabetically 
+```{r}
+PrePostWide[,order(colnames(PrePostWide))]
+```
+Did not work
+
+```{r}
+describe(PrePostWide)
+```
+
+Exproting the latest version of prepoost (14/7)
+
+```{r}
+write.csv(PrePostWide, "PrePostWide_14_7_2021.csv")
+```
+
+
+```{r}
+library(psych)
+library(car)
+```
+
+```{r}
+describe(PostCC_Wide)
+```
 
 #Merging data from pre and post 
 ```{r}
@@ -659,8 +684,7 @@ PrePostCC_Wide <- merge(PreCC_Wide,PostCC_Wide)
 write.csv(PrePostCC_Wide, "PrePostCC_wide.csv")
 ```
 
-
-For analysis, removng ID and X
+For analysis, removing ID and X
 
 ```{r}
 PrePostCC_Wide <- dplyr:: select(PrePostCC_Wide, -ID, -X)
