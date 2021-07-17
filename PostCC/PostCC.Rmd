@@ -681,7 +681,13 @@ PrePostCC_Wide <- merge(PreCC_Wide,PostCC_Wide)
 ```
 
 ```{r}
-write.csv(PrePostCC_Wide, "PrePostCC_wide.csv")
+write.csv(PrePostWide, "PrePostCC_wide_raw.csv")
+```
+
+
+
+```{r}
+merge(P)
 ```
 
 For analysis, removing ID and X
@@ -838,3 +844,94 @@ geom_segment( aes(x=Question, xend=Question, y=PreValue, yend=PostValue), color=
 library(hrbrthemes)
 ```
 
+
+
+#Correlations
+
+```{r}
+install.packages("Hmisc")
+library(Hmisc)
+```
+
+PreCC matrix
+
+```{r}
+install.packages("corrplot")
+library(corrplot)
+```
+
+```{r}
+PreCC_Cor <-rcorr(as.matrix(PreCCmatrix), type = c("spearman"))
+PreCC_rho = PreCC_Cor$r
+```
+
+```{r}
+cor.plot(PreCC_rho, main = "PreCC_Spearman Correlation 20210714")
+```
+
+
+I am not sure if it is appropriate to have a different sclae for questions 9 & 14, so I will change it to zeros & 1s and will see how this affect the correlations. 
+
+This was done for questions: 9, 14, 20 & 21
+
+#loading the binrary version of the data to check whether it affected 
+
+```{r}
+PostCC_bi <- read.csv("PostCCWide_bi.csv")
+
+PostCC_bi_matrix <- dplyr::select(PostCC_bi, -ID, -X)
+
+```
+
+
+
+```{r}
+PostCC_CorBi <-rcorr(as.matrix(PostCC_bi_matrix), type = c("spearman"))
+PostCC_rho = PostCC_CorBi$r
+```
+
+
+```{r}
+cor.plot(PreCC_rho, main = "PostCC_Bi_Spearman Correlation 20210714")
+```
+
+
+#EFA (note the below analysis with done after converting all the questions to 0s & 1s; thus the name Bi = binary was called for these models)
+
+
+```{r}
+fa.parallel(PreCC_rho, n.obs=413, fm="pa", fa="fa", main = "Scree Plot") #You need to insert the correlation matrix not the raw matrix itself
+```
+
+The parallel analysis suggest 4 factors, however the loading of the items on 2 factors only is good, and the other 2 is low. 
+
+```{r}
+PostCCBi_model_4 = fa(PreCC_rho, nfactor=4, n.obs= 413, fm="uls", rotate = "none") #I can supply the correlation matrix directly, or provide the data frame and decide which cor type to be done: 'tet' stands for tetrachoric
+```
+ 
+ 
+```{r}
+PostCCBi_model_4
+```
+ 
+ The scores seem to be very good: residuals (RMSR) is  0.03 , Tucker Lewis Index of factoring reliability =  0.928
+RMSEA index =  0.043  and the 90 % confidence intervals are  0.029 0.056
+BIC =  -264.01
+
+Note: The thrid and 4th factor had negative scores
+
+Trying out 2 factor models and comparing the scores 
+
+```{r}
+plot(PostCCBi_model)
+```
+
+```{r}
+PostCCBi_model_2 = fa(PreCC_rho, nfactor=2, n.obs= 413, fm="uls", rotate = "none")
+PostCCBi_model_2 
+```
+The scores decreased in this case (Tucker Lewis Index of factoring reliability =  0.886
+RMSEA index =  0.054)
+
+
+ 
