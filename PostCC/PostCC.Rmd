@@ -475,6 +475,7 @@ PrePost_mean %>%
 shapiro_test(PreValue, Post.Value)
 ```
 
+
 ```{r}
 hist(PrePost_mean$PreValue)
 hist(PrePost_mean$Post.Value)
@@ -492,6 +493,10 @@ PostCC <- read.csv("PostCC.csv",header = T, na.strings=c(""," ","NA"))
 
 ```{r}
 write.csv(PostCC, "PostCC.csv")
+```
+
+```{r}
+MVN::(PreCC_Wide)
 ```
 
 
@@ -891,10 +896,19 @@ PostCC_rho = PostCC_CorBi$r
 ```
 
 
+
 ```{r}
-cor.plot(PreCC_rho, main = "PostCC_Bi_Spearman Correlation 20210714")
+cor.plot(PostCC_rho, main = "PostCC_Bi_Spearman Correlation 20210714")
+```
+Trying tetrachoric & comparing it to spearman
+
+```{r}
+PostCC_tet <- tetrachoric(PostCC_bi_matrix)
 ```
 
+```{r}
+cor.plot(PostCC_tet$rho)
+```
 
 #EFA (note the below analysis with done after converting all the questions to 0s & 1s; thus the name Bi = binary was called for these models)
 
@@ -914,6 +928,13 @@ PostCCBi_model_4 = fa(PreCC_rho, nfactor=4, n.obs= 413, fm="uls", rotate = "none
 PostCCBi_model_4
 ```
  
+
+ 
+```{r}
+fa.diagram(PostCCBi_model_4)
+```
+ 
+
  The scores seem to be very good: residuals (RMSR) is  0.03 , Tucker Lewis Index of factoring reliability =  0.928
 RMSEA index =  0.043  and the 90 % confidence intervals are  0.029 0.056
 BIC =  -264.01
@@ -933,5 +954,67 @@ PostCCBi_model_2
 The scores decreased in this case (Tucker Lewis Index of factoring reliability =  0.886
 RMSEA index =  0.054)
 
+```{r}
+fa.diagram(PostCCBi_model_2)
+```
+
+```{r}
+factor.congruence(list(PostCCBi_model_2,PostCCBi_model_4))
+```
 
  
+#Examining the polymodel (where the questions are graded in 0.5 & 1)
+
+
+```{r}
+PostCC_Cor <-cor(PostCC_Wide[sapply(PostCC_Wide, is.numeric)], use='pairwise', method = c("spearman"))
+```
+
+
+```{r}
+cor.plot(PostCC_rho, main = "PostCC_poly_Spearman Correlation")
+```
+
+Trying out polychor
+
+```{r}
+PostCC_polyMatrix <- select(PostCC_Wide, -ID)
+```
+
+
+```{r}
+PostCCPolyCor <- polychoric(PostCC_polyMatrix)
+par(mar = c(2, 3, 3, 2))
+cor.plot(PostCCPolyCor$rho, main = "PostCC_Polychoric Correlations")
+image(as.matrix(leg),col=cx,axes=T)
+```
+
+
+The results of the bi matrix looks better. Generally, spearman correlations produce more moderate correlations than polychoric The poluchoric model resulted in negative correlations. 
+
+#EFA for the polymodel
+
+```{r}
+PostCCpoly_model_2 = fa(PostCC_Cor, nfactor=2, n.obs= 413, fm="uls", rotate = "none")
+PostCCpoly_model_2 
+
+```
+Tucker Lewis Index of factoring reliability =  0.856
+RMSEA index =  0.07  and the 90 % confidence intervals are  0.061 0.08
+
+```{r}
+fa.diagram(PostCCpoly_model_2)
+```
+
+
+Trying 4 factor model
+
+```{r}
+PostCCpoly_model_4 = fa(PostCC_Cor, nfactor=4, n.obs= 413, fm="uls", rotate = "none")
+PostCCpoly_model_4
+```
+
+
+
+
+
