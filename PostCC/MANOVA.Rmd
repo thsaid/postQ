@@ -468,6 +468,7 @@ The P-value shows that there is a significant difference between the groups (eve
 
 #8/7/2021: After Michelle's supervision, I learned that I need to define NAs when importing the data. I also need to change the dep. variables & indepenedent variables as factors 
 
+<<<<<<< HEAD
 Renaming the files, before saving
 
 ```{r}
@@ -588,4 +589,6 @@ plot(PrePostDFA)
 ```{r}
 hist(PrePost_mean
 ```
+=======
+>>>>>>> 94f00635359239141998667830053bb6df1921df
 
