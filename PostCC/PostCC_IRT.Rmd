@@ -37,18 +37,14 @@ PostCC$Q09post == 2 ~ c("Disagree")))
 Recoding values for Q14Post (Agree14 was coded to differentiate it from the Agree in Q9.)
 
 ```{r}
-PostCC2 <-PostCC2 %>% mutate (Q14PPost = case_when(
-PostCC$Q14post == 3 ~ c("Not Sure"),
-PostCC$Q14post == 4 ~ c("Agree14"),
-PostCC$Q14post == 2 ~ c("Disagree14")))
+PostCC2 <-PostCC2 %>% mutate (Q14Post = case_when(
+PostCC2$Q14post == 3 ~ c("Not Sure"),
+PostCC2$Q14post == 4 ~ c("Agree14"),
+PostCC2$Q14post == 2 ~ c("Disagree14")))
 ```
 
 ```{r}
-PostCC2 %>% 
-  mutate(Q144Post = case_when(PostCC$Q14post == 3 ~ c("Not Sure"),
-PostCC$Q14post == 4 ~ c("Agree14"),
-PostCC$Q14post == 2 ~ c("Disagree14")))
-
+write.csv(PostCC, "PostCC.csv")
 ```
 
 
@@ -65,6 +61,7 @@ PostCC <-select(PostCC2, ID:Q14Post, -Q09post, -Q14post)
 ```
 
 
+
 ```{r}
 spread(PostCCscores, Question, value)
 ```
@@ -75,14 +72,14 @@ PostCCscoresNew <- select(PostCCscores, - Response)
 ```
 
 ```{r}
-PostCC_Wide <- PostCCscores  %>%
+PostCC_Wide <- PostCCscoresNew  %>%
 pivot_wider(names_from = Question, values_from = value)
 ```
 
 #Examining the binary questions (excluding Q20, 21, 22)
 
 ```{r}
-PostCCIRT <- dplyr::select(PostCCScore_Wide, -ID, -Q20post, -Q21post, -Q22post)
+PostCCIRT <- dplyr::select(PostCC_Wide, -ID, -Q20post, -Q21post, -Q22post)
 ```
 
 ```{r}
@@ -122,13 +119,14 @@ For analysis, removng ID and X
 PrePostCC_Wide <- dplyr:: select(PrePostCC_Wide, -ID, -X)
 ```
 
+
 ```{r}
-write.csv(CompDescriptives, "CompAnalysisCC.csv")
+CompDescriptives <- describe(PrePostCC_Wide)
 ```
 
 
 ```{r}
-CompDescriptives <- describe(PrePostCC_Wide)
+write.csv(CompDescriptives, "CompAnalysisCC.csv")
 ```
 
 

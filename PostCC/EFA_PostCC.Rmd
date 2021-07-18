@@ -82,6 +82,15 @@ summary(PostCC_EFA1)
 
 
 ```{r}
+PreCC_EFA_ml = fa(PreCCmatrix, nfactor=2, n.obs= 413,missing = TRUE, fm="ml", rotate = "none")
+PreCC_EFA_ml
+fa.diagram(PreCC_EFA_ml)
+```
+
+Using ols for 4 facrtors
+
+
+```{r}
 PostCC_EFA_ols = fa(PostCC_polyMatrix, nfactor=4, n.obs= 413, fm="ols", rotate = "none")
 ```
 
@@ -103,8 +112,21 @@ fa.diagram(PostCC_EFA_uls2)
 #EFA for pre cc to compare the difference between both
 
 
+With rotations 
+
 ```{r}
-PreCC_EFA_uls2 = fa(PreCCmatrix, nfactor=2, n.obs= 413, fm="uls", rotate = "none")
-fa.diagram(PreCC_EFA_uls2)
+PreCC_EFA_ols2 = fa(PreCCmatrix, nfactor=2, n.obs= 413, fm="ols", rotate = "none")
+fa.diagram(PreCC_EFA_ols2)
 ```
+
+without rotations
+
+
+```{r}
+PreCC_EFA_ols2 = fa(PreCCmatrix, nfactor=2, n.obs= 413, fm="ols")
+fa.diagram(PreCC_EFA_ols2)
+```
+
+Note the difference between ols and uls.. Q22 is invluded in F1 in ols, but not while using ULS. Need to read more about them and know when to use which one. 
+
 
