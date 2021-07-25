@@ -11,7 +11,6 @@ Notes on dates
 Ms.Rasha group on 16/5
 
 =======
->>>>>>> 958f6d4ed7cb8936b003e4e2c5ff5bd49453f436
 ```{r}
 postQ <-read.csv("Post Questionnaire.csv")
 library(tidyverse)
