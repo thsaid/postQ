@@ -36,7 +36,7 @@ Loading SALES files
 ```{r}
 SALES <- read.csv("SALES_full.csv")
 ```
-Renaming th he Questions using S, to avoid confusion with the SALES when merged together
+Renaming the Questions using S, to avoid confusion with the SALES when merged together
 
 ```{r}
 SALES <- rename(SALES, SQ07=Q07, SQ08=Q08, SQ09=Q09, SQ10=Q10, SQ11=Q11, SQ12=Q12, SQ13=Q13, SQ14=Q14, SQ15=Q15, SQ16=Q16, SQ17=Q17, SQ18=Q18, SQ19=Q19, SQ20=Q20, SQ21=Q21, SQ22=Q22, SQ23=Q23, SQ24=Q24, SQ25=Q25, SQ26=Q26, SQ27=Q27, SQ28=Q28, SQ29=Q29, SQ31=Q31, SQ32=Q32)
