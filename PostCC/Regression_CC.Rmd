@@ -11,31 +11,49 @@ This file is dedicated to trialling out some regression analysis with the CC to 
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
 ```{r}
-PrePostCC <-read.csv("PrePostCCIndGain_25_7_2021.csv")
-```
-
-```{r}
-SALES_scores <- read.csv("SALES_Factors.csv")
-```
-
-```{r}
-SALES_Factors <- rename(SALES_Factors, SelfEfficacy_S = SelfEfficacy, MasteryGoals_S = MasteryGoals)
+library(tidyverse)
 ```
 
 
+```{r}
+PrePostCC <-read.csv("PrePostCC_wide.csv")
+```
+
 
 ```{r}
-CC_SALES <- merge(PrePostCC, SALES_scores, by = "ID")
+SALES_factors <- read.csv("SALES_Factors_28072021.csv")
+```
+
+
+```{r}
+SALES_Factors <- rename(SALES_factors, SelfEfficacy_S = SelfEfficacy, MasteryGoals_S = MasteryGoals)
 ```
 
 ```{r}
-CC_SALES <- dplyr::select(CC_SALES, -X, -Picture, -Color)
+PrePostInd <- read.csv("PrePostCCInd.csv")
 ```
 
 ```{r}
-write.csv(CC_SALES, "CC_SALES_270721.csv")
+PrePostInd <- PrePostInd %>%
+    mutate(Gain = PostScore - PreScore)
+```
+
+```{r}
+write.csv(PrePostInd, "PrePostGain.csv")
+```
+
+
+```{r}
+CC_SALES <- merge(PrePostInd, SALES_Factors, by = "ID")
+```
+
+```{r}
+CC_SALES <- dplyr::select(CC_SALES, -X.x, -X.y)
+```
+
+```{r}
+write.csv(CC_SALES, "CC_SALES_220821.csv")
 ```
 
 ```{r}
@@ -173,7 +191,7 @@ PALS_Factors <- read.csv("PALS_Factors_renamed.csv")
 ```
 
 ```{r}
-write.csv(PALS_Factors, "PALS_Factors_renamed.csv")
+PALS_Factors <- read.csv("PALS_Factors.csv")
 ```
 
 Renaming the common vairables
@@ -182,10 +200,18 @@ Renaming the common vairables
 PALS_Factors <- rename(PALS_Factors, SelfEfficacy_P = SelfEfficacy, MasteryGoals_P = MasteryGoals)
 ```
 
+```{r}
+write.csv(PALS_Factors, "PALS_Factors_renamed.csv")
+```
+
 Merging them
 
 ```{r}
 CC_SALES_PALS <- merge(CC_SALES, PALS_Factors, by = "ID")
+```
+
+```{r}
+write.csv(CC_SALES_PALS, "CC_SALES_PALS.csv")
 ```
 
 Cleaning the merged dfs
@@ -373,4 +399,12 @@ cor.plot(Cor_CC_SALES_SS)
 ```
 
 For the gain scores, the only corelation that was moderate is the post score (0.36) and the prescore had a -ve correlation of (-.57) which is expected. 
+
+#My work on 22/8
+
+In this file, I aim to merge the average scores (re-calculated) and re-test the regressions. 
+
+
+
+
 
