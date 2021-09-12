@@ -1,0 +1,713 @@
+---
+title: "SEM"
+author: "Tamer Said"
+date: "26/07/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse) # For data wrangling
+library(lavaan) # For CFA/MI/SEM
+library(semPlot) # For CFA/MI/SEM
+library (semTools) # For CFA/MI/SEM
+library(OpenMx) # For SEM
+
+```
+
+Converting from corr to cov
+
+```{r}
+covmat <- cor2cov(Cormat)
+```
+ did not work because SDs are missing
+ 
+```{r}
+CC_SA_PA_SS <- CC_SA_PA_SS %>%
+  rename(SelfEfficacy_S = SelfEfficacy)
+```
+ 
+ Building measurement model (model 1 leaving unique construcst and combining like terms together)
+ 
+```{r}
+
+CFAmodel <- 'MasteryGoals =~ MasteryGoals_S + MasteryGoals_P
+Task_Value =~ TaskValue
+SelfEfficacy =~ SelfEfficacy_P + SelfEfficacy_S
+PerfGoals =~ PerfAppGoals
+PerfAvoidance =~ PerfAvGoals
+Inhibition =~ SS_ACC
+Learning =~ Gain
+Learning ~  Task_Value + MasteryGoals + SelfEfficacy + PerfGoals + PerfAvoidance + Inhibition'
+
+```
+ 
+```{r}
+ 
+SEMfit <- sem(CFAmodel, data = CC_SA_PA_SS, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit)
+varTable(SEMfit)
+parameterEstimates(SEMfit)
+# Plot the model - this model plot below shows up as a black & white plot with standardized parameter estimates
+semPaths(SEMfit, what = "path", whatLabels = "std", style = "lisrel", layout = "spring", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = TRUE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 10, sizeMan2 = 10, sizeLat = 10, sizeLat2 = 10, sizeInt = 6, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit)
+```
+ The fit of this model is poor.. 
+ 
+ #Model 2: will try motivation as a whole latent
+ 
+ 
+```{r}
+model2 <- 'Motivation =~ MasteryGoals_S + MasteryGoals_P + TaskValue
++ SelfEfficacy_P + SelfEfficacy_S
++ PerfAppGoals
+PerfAvoidance =~ PerfAvGoals
+Inhibition =~ SS_ACC
+Learning =~ Gain
+Learning ~  Motivation + PerfAvoidance + Inhibition'
+```
+ 
+```{r}
+SEMfit2 <- sem(model2, data = CC_SA_PA_SS, se = "robust",   test = "Satorra-Bentler")
+summary(SEMfit, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit2)
+varTable(SEMfit2)
+parameterEstimates(SEMfit2)
+# Plot the model - this model plot below shows up as a black & white plot with standardized parameter estimates
+semPaths(SEMfit2, what = "path", whatLabels = "std", style = "lisrel", layout = "spring", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = TRUE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 10, sizeMan2 = 10, sizeLat = 10, sizeLat2 = 10, sizeInt = 6, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit)
+```
+ 
+Trying ordinal values (Not applicable since I am ysing factor scores, which is continuous)
+
+```{r}
+SEMfit2 <- sem(model2, data = CC_SA_PA_SS, se = "robust",   test = "Satorra-Bentler")
+summary(SEMfit2 , rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit2)
+varTable(SEMfit2)
+parameterEstimates(SEMfit2)
+# Plot the model - this model plot below shows up as a black & white plot with standardized parameter estimates
+semPaths(SEMfit2, what = "path", whatLabels = "std", style = "lisrel", layout = "spring", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = TRUE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 10, sizeMan2 = 10, sizeLat = 10, sizeLat2 = 10, sizeInt = 6, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit)
+```
+
+#SALES_Model
+
+```{r}
+SALESmodelSEM <- 'MG =~ MasteryGoals
+TV =~ TaskValue 
+SE =~SelfEfficacy
+PostScore ~  MG + SE + TV'
+```
+
+
+```{r}
+PrePost <- read.csv("PrePostCCInd.csv")
+```
+
+```{r}
+CC_SALES <- merge(PrePost, SALES_Factors, by = "ID")
+```
+
+```{r}
+SEMfit4 <- sem(SALESmodelSEM, data = CC_SALES, se = "robust",   test = "Satorra-Bentler")
+summary(SEMfit4 , rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit4)
+varTable(SEMfit4)
+parameterEstimates(SEMfit4)
+# Plot the model - this model plot below shows up as a black & white plot with standardized parameter estimates
+semPaths(SEMfit4, what = "path", whatLabels = "std", style = "lisrel", layout = "spring", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = TRUE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 10, sizeMan2 = 10, sizeLat = 10, sizeLat2 = 10, sizeInt = 6, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit)
+```
+
+#Model 3
+
+Dividing motivaiton into MG/TV, and SE and testing the net gain is the outcome variable 
+
+```{r}
+model3 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
+SE =~SelfEfficacy_P 
+PG =~PerfAppGoals
+PerfAvoidance =~ PerfAvGoals
+Inhibition =~ SS_ACC
+Gain ~  MG_TV + SE + PerfAvoidance + Inhibition'
+```
+
+
+```{r}
+SEMfit3 <- sem(model3, data = CC_SA_PA_SS, se = "robust",   test = "Satorra-Bentler")
+summary(SEMfit3 , rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit3)
+varTable(SEMfit3)
+parameterEstimates(SEMfit3)
+# Plot the model - this model plot below shows up as a black & white plot with standardized parameter estimates
+semPaths(SEMfit3, what = "path", whatLabels = "std", style = "lisrel", layout = "spring", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = TRUE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 10, sizeMan2 = 10, sizeLat = 10, sizeLat2 = 10, sizeInt = 6, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit)
+```
+
+
+#Model 3.1
+
+Dividing motivation into MG/TV, and SE and testing the postscore is the outcome variable 
+
+```{r}
+model3.1 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
+SE =~SelfEfficacy_P 
+PG =~PerfAppGoals
+PerfAvoidance =~ PerfAvGoals
+Inhibition =~ SS_ACC
+PostScore ~  SALES + SE + PG + PerfAvoidance + Inhibition'
+```
+
+
+```{r}
+SEMfit3.1 <- sem(model3.1, data = CC_SA_PA_SS, se = "robust",   test = "Satorra-Bentler")
+summary(SEMfit3.1 , rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit3.1)
+varTable(SEMfit3)
+parameterEstimates(SEMfit3.1)
+# Plot the model - this model plot below shows up as a black & white plot with standardized parameter estimates
+semPaths(SEMfit3.1, what = "path", whatLabels = "std", style = "lisrel", layout = "spring", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = TRUE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 10, sizeMan2 = 10, sizeLat = 10, sizeLat2 = 10, sizeInt = 6, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit3.1)
+```
+This model is the best fit so far.. 2 changes so far: having postscore is the outcome variable, and then putting the SALES sub-constructs together. 
+
+Trying the same model using gain score as the outcome variable 
+
+```{r}
+model3.2 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
+SE =~SelfEfficacy_P 
+PG =~PerfAppGoals
+PerfAvoidance =~ PerfAvGoals
+Inhibition =~ SS_ACC
+Gain ~  SALES + SE + PG + PerfAvoidance + Inhibition'
+```
+
+
+
+```{r}
+SEMfit3.2 <- sem(model3.2, data = data, se = "robust",   test = "Satorra-Bentler")
+summary(SEMfit3.2 , rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit3.2)
+varTable(SEMfit3.2)
+parameterEstimates(SEMfit3.2)
+# Plot the model - this model plot below shows up as a black & white plot with standardized parameter estimates
+semPaths(SEMfit3.2, what = "path", whatLabels = "std", style = "lisrel", layout = "spring", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = TRUE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 10, sizeMan2 = 10, sizeLat = 10, sizeLat2 = 10, sizeInt = 6, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit3.2)
+```
+
+Best model till now 
+#Trying out path models(from CB course)
+
+#Renaming some variables before we start (I'm gonna name it data for short)
+
+```{r}
+data <- rename(CC_SALES_PALS_SS_FM, SS_EFF = Eff2,  SS_ACC = Average.of.ACC ,FM_EFF = EFF2)
+```
+
+
+```{r}
+#fitting path analysis model
+pathmodel.1 <- '
+              #regressions
+             Gain ~  PreScore + PostScore + FM_EFF + SS_EFF
+              FM_EFF ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
+           SS_EFF ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
+          PostScore ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
+          PreScore ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
+
+              #covariances
+              PreScore ~~ PostScore
+              FM_EFF ~~ SS_EFF '
+```
+
+The followin error appeared: sample covariance matrix is not positive-definite
+
+
+Trying another model (just EF & motivation )
+
+```{r}
+pathmodel.1 <- '
+              #regressions
+            FM_ACC_mean ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
+           SS_ACC ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
+FM_ACC_mean ~~  SS_ACC
+'
+```
+  
+  FM_ACC_mean ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
+           SS_EFF ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
+              #covariances '
+
+```{r}
+fit <- sem(pathmodel.1, data=data, meanstructure=TRUE)
+summary(fit, standardized=TRUE, rsquare=TRUE, fit.measures = TRUE)
+summary(fit, std.nox=TRUE, rsquare=TRUE)
+```
+```{r}
+cov(data)
+```
+
+
+The only sig. effect is the -ve relation between PERFAPP goals and ACC in both stopsignal and FM tasks
+
+
+```{r}
+fitted(fit) #this command shows the model implied cov matrix
+resid(fit, type="raw") #observed model - implied model 
+resid(fit, type="normalized")
+```
+It seems that the diff between the model implied cov and the observed one does not differ at all. 
+
+#Pathmodel 2: testing the relation between EF & CC, having motivation variables as mediators
+
+```{r}
+pathmodel2 <- '
+              #regressions
+              PostScore ~  FM_ACC_mean + SS_ACC 
+              FM_ACC_mean ~ MasteryGoals_S + TaskValue + SelfEfficacy_S 
+             SS_ACC ~ MasteryGoals_S + TaskValue + SelfEfficacy_S 
+FM_ACC_mean ~~  SS_ACC
+'
+```
+
+```{r}
+fit2 <- sem(pathmodel2, data=data, meanstructure=TRUE)
+summary(fit, standardized=TRUE, rsquare=TRUE, fit.measures = TRUE)
+```
+
+```{r}
+resid(fit, type="raw") #observed model - implied model 
+resid(fit, type="normalized")
+```
+
+Comparing booth models using likelihood test( it's not really a fair comparision here, because the no. of variables is different)
+
+```{r}
+lavTestLRT(fit2, fit)
+```
+
+It appreas that fit2 is much better
+
+#Using Modification Indices
+
+```{r}
+modindices(fit2, sort. = TRUE)
+```
+Very minimal MI, nothing above 10. 
+
+lhs: left hand side of the eq (DV).. the MI indicates the expected change in chi square.. values below 10 are not really significant. Here it is suggested to allow the residuals between psot score & SS_ACC to covary.. but even this, does noot produce a huge change. 
+#Testing indirect effect between motivation, EF and post cc
+
+```{r}
+effects2 <- '
+              #regressions (redefing the indirect effects)
+              PostScore ~  F_P*FM_ACC_mean + S_P*SS_ACC 
+              FM_ACC_mean ~ M_F*MasteryGoals_S + T_F*TaskValue + S_F*SelfEfficacy_S 
+             SS_ACC ~ M_S*MasteryGoals_S + T_S*TaskValue + S_S*SelfEfficacy_S 
+
+FM_ACC_mean ~~  SS_ACC
+
+#Indirect effects 
+
+ ind_F := M_F*T_F*S_F
+ ind_S :=  M_S*T_S*S_S
+'
+
+set.seed(62973)
+fit_eff <- sem(effects2, data=data, meanstructure=TRUE, se="bootstrap", bootstrap=1000)
+parameterEstimates(fit_eff, boot.ci.type = "perc")
+parameterEstimates(fit_eff, boot.ci.type = "bca.simple") # biased corected CI..gold standard for mediation effect using bootstrapping 
+
+```
+The output shows that all the indirect effects are NOT significant they all pass the zero CI. 
+
+
+Repeating SEM with allowing residuals to covary
+
+model3.2 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
+SE =~SelfEfficacy_P 
+PG =~PerfAppGoals
+PerfAvoidance =~ PerfAvGoals
+Inhibition =~ SS_ACC
+Gain ~  SALES + SE + PG + PerfAvoidance + Inhibition'
+
+```{r}
+model4 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
+PG =~ PerfAvGoals  + PerfAppGoals
+PALS =~ MasteryGoals_P + SelfEfficacy_P
+Inhibition =~ SS_ACC
+Switching  =~ FM_ACC_mean
+Learning =~ PostScore 
+Learning ~  SALES + PG + Inhibition + Switching + PreScore
+Inhibition ~~ Switching '
+```
+
+```{r}
+SEMfit4 <- sem(model4, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit4, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit4)
+varTable(SEMfit4)
+parameterEstimates(SEMfit4)
+# Plot the model - this model plot below shows up as a black & white plot with standardized parameter estimates
+semPaths(SEMfit4, what = "path", whatLabels = "std", style = "lisrel", layout = "spring", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = TRUE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 10, sizeMan2 = 10, sizeLat = 10, sizeLat2 = 10, sizeInt = 6, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit4)
+```
+
+Testing CFA models including switching & inhibition as one latent
+
+```{r}
+CFAmodel <- 
+   'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S 
+PG =~ PerfAvGoals  + PerfAppGoals
+PALS =~ MasteryGoals_P + SelfEfficacy_P
+EF =~ SS_ACC + FM_ACC_mean
+Learning =~ PostScore + Gain'
+fit_CFA <- cfa(CFAmodel, data=data, meanstructure=TRUE, std.lv=TRUE)
+summary(fit_CFA, fit.measures=TRUE, standardized=TRUE, rsquare=TRUE)
+
+modindices(fit_CFA, sort.=TRUE, minimum.value=10)
+```
+Based on this model, the factor loading on EF latent is very low ..0.09 & 0.05 respectively. 
+
+Let's try having a factor for inhibition & another for switching
+
+```{r}
+CFAmodel2 <- 
+   'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S 
+PG =~ PerfAvGoals  + PerfAppGoals
+PALS =~ MasteryGoals_P + SelfEfficacy_P
+Inhibition =~ SS_ACC + Average.of.EFF
+Switching  =~ FM_ACC_mean + FM_EFF_mean
+Inhibition ~~ Switching
+Learning =~ PostScore + Gain
+'
+fit_CFA2 <- cfa(CFAmodel2, data=data, meanstructure=TRUE, std.lv=TRUE)
+summary(fit_CFA2, fit.measures=TRUE, standardized=TRUE, rsquare=TRUE)
+
+modindices(fit_CFA2, sort.=TRUE, minimum.value=10)
+```
+
+Notes on CFA model 2, the inclusion of the EFF score, highly distorted the model,. It appears that something went wrong in calculating such score. 
+
+
+Returning back to mdoel 4 and adding more mediation effects (EF as mediators)
+Setting post score as the learning
+```{r}
+model5 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
+PG =~ PerfAvGoals  + PerfAppGoals
+PALS =~ MasteryGoals_P + SelfEfficacy_P
+Inhibition =~ SS_ACC
+Switching  =~ FM_ACC_mean
+Learning =~ PostScore 
+Learning ~  Inhibition + Switching + PreScore + SALES
+Inhibition ~ SALES + PALS
+Switching ~ SALES + PALS '
+```
+In 5.1, gain will be the measurement of learning instead of post score
+
+```{r}
+model5.1 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
+PG =~ PerfAvGoals  + PerfAppGoals
+PALS =~ MasteryGoals_P + SelfEfficacy_P
+Inhibition =~ SS_ACC
+Switching  =~ FM_ACC_mean
+Learning =~ Gain
+Learning ~  Inhibition + Switching + PreScore + SALES
+Inhibition ~ SALES + PALS
+Switching ~ SALES + PALS '
+```
+
+
+```{r}
+SEMfit5.1 <- sem(model5.1, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit5.1, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit5.1)
+varTable(SEMfit5.1)
+parameterEstimates(SEMfit5.1)
+# Plot the model - this model plot below shows up as a black & white plot with standardized parameter estimates
+semPaths(SEMfit5.1, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 5, sizeLat = 5, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit4)
+```
+In model 5.1 (will gain is the learning predictor), the model fit is worse.. the oonly sig predictor of gain was inhibition. None of the other predictors had effect. 
+
+
+
+in model 6, I will restrict any direct effect between SALES and learning 
+```{r}
+model6 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
+PG =~ PerfAvGoals  + PerfAppGoals
+PALS =~ MasteryGoals_P + SelfEfficacy_P
+Inhibition =~ SS_ACC
+Switching  =~ FM_ACC_mean
+Learning =~ PostScore 
+Learning ~  Inhibition + Switching + PreScore 
+Inhibition ~ SALES + PALS
+Switching ~ SALES + PALS '
+```
+
+```{r}
+SEMfit6 <- sem(model6, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit6, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit6)
+varTable(SEMfit6)
+parameterEstimates(SEMfit6)
+# Plot the model - this model plot below shows up as a black & white plot with standardized parameter estimates
+semPaths(SEMfit6, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 5, sizeLat = 5, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit4)
+```
+```{r}
+modindices(SEMfit6, sort. = TRUE)
+```
+Based on the modification indices, it appeared that switching could be regressed by FM_ACC and vice versa.. will put EF under one latent and test it in model 7
+#Model 7: putting switching & inhibition under one latent 
+
+```{r}
+model7<- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
+PG =~ PerfAvGoals  + PerfAppGoals
+PALS =~ MasteryGoals_P + SelfEfficacy_P
+EF =~ SS_ACC + FM_ACC_mean
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES
+EF ~ SALES + PALS'
+```
+
+```{r}
+SEMfit7<- sem(model7, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit7, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit7)
+varTable(SEMfit7)
+parameterEstimates(SEMfit7)
+# Plot the model - this model plot below shows up as a black & white plot with standardized parameter estimates
+semPaths(SEMfit7, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 5, sizeLat = 5, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit7)
+```
+model 7.1 Canceling the direct effect between SALES and learning
+
+```{r}
+model7.1<- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
+PG =~ PerfAvGoals  + PerfAppGoals
+PALS =~ MasteryGoals_P + SelfEfficacy_P
+EF =~ SS_ACC + FM_ACC_mean
+Learning =~ PostScore 
+Learning ~  EF + PreScore 
+EF ~ SALES + PALS'
+```
+```{r}
+SEMfit7.1<- sem(model7.1, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit7.1, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit7.1)
+varTable(SEMfit7.1)
+parameterEstimates(SEMfit7.1)
+```
+
+
+All the models show an insignificant regression between EF & motivation. 
+
+```{r}
+model8<- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
+PG =~ PerfAvGoals  + PerfAppGoals
+PALS =~ MasteryGoals_P + SelfEfficacy_P
+EF =~ SS_ACC + FM_ACC_mean
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES
+EF ~ SALES + PALS'
+```
+
+```{r}
+SEMfit8<- sem(model8, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit8, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit8)
+varTable(SEMfit8)
+parameterEstimates(SEMfit8)
+# Plot the model - this model plot below shows up as a black & white plot with standardized parameter estimates
+semPaths(SEMfit8, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 5, sizeLat = 5, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit7)
+```
+```{r}
+modindices(SEMfit8, sort. = TRUE)
+```
+
+Model 8.1: will allow for the direct relation between PG & Learning 
+
+```{r}
+model8.1<- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
+PG =~ PerfAvGoals  + PerfAppGoals
+PALS =~ MasteryGoals_P + SelfEfficacy_P
+EF =~ SS_ACC + FM_ACC_mean
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG
+EF ~ SALES + PALS'
+```
+
+```{r}
+SEMfit8.1<- sem(model8.1, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit8.1, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit8.1)
+varTable(SEMfit8.1)
+parameterEstimates(SEMfit8.1)
+# Plot the model - this model plot below shows up as a black & white plot with standardized parameter estimates
+semPaths(SEMfit8.1, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 5, sizeLat = 5, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit7)
+```
+
+
+Mod indices suggested a covariance between SE_S & SE_P. WIll attempt to have all motivational variables under one latent
+
+```{r}
+model9<- '
+PG =~ PerfAvGoals  + PerfAppGoals
+Motivation  =~  MasteryGoals_P + SelfEfficacy_P + MasteryGoals_S + TaskValue + SelfEfficacy_S
+EF =~ SS_ACC + FM_ACC_mean
+Learning =~ PostScore 
+Learning ~  EF + PreScore + Motivation
+EF ~ Motivation'
+```
+
+```{r}
+SEMfit9<- sem(model9, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit9, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit9)
+varTable(SEMfit9)
+parameterEstimates(SEMfit9)
+```
+Very poor fit when having all motiv. variabels under one latent (esp SALES & PALS)
+
+Can I have the outcome as a manifest variable? will try this out
+```{r}
+model8.2<- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
+PG =~ PerfAvGoals  + PerfAppGoals
+PALS =~ MasteryGoals_P + SelfEfficacy_P
+EF =~ SS_ACC + FM_ACC_mean
+PostScore  ~  EF + PreScore + SALES + PG
+EF ~ SALES + PALS'
+```
+
+```{r}
+SEMfit8.2<- sem(model10, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit10, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit10)
+varTable(SEMfit10)
+parameterEstimates(SEMfit10)
+```
+Model 10: removing all motiv. variables to chekc the quality of the model
+
+```{r}
+model10<- '
+EF =~ SS_ACC + FM_ACC_mean
+PostScore  ~  EF + PreScore 
+'
+SEMfit10<- sem(model10, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit10, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit10)
+varTable(SEMfit10)
+parameterEstimates(SEMfit10)
+```
+```{r}
+lavTestLRT(SEMfit7.1, SEMfit7) #testing whether removing the direct effect improved the model or not.. 
+```
+The chisq difference between the 2 models is minimal.. and the probability is not significant. 
+
+
+Trying out motv. as predictors of prescores
+
+```{r}
+model11<- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
+PG =~ PerfAvGoals  + PerfAppGoals
+PALS =~ MasteryGoals_P + SelfEfficacy_P
+EF =~ SS_ACC + FM_ACC_mean
+PreScore ~ SALES + PALS + PG + EF
+PostScore  ~  EF + PreScore 
+EF ~ SALES + PALS'
+```
+
+```{r}
+SEMfit11<- sem(model11, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit11, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit11)
+varTable(SEMfit11)
+parameterEstimates(SEMfit11)
+```
+
+
+Partial correlations
+
+```{r}
+library(ppcor)
+library(corrplot)
+cor.mat <- pcor(data[sapply(data, is.numeric)])
+```
+
+```{r}
+corrplot(data)
+```
+
