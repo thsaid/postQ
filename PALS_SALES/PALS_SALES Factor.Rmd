@@ -1,0 +1,499 @@
+---
+title: "PALS_SALES Factors"
+author: "Tamer Said"
+date: "25/01/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Loading factor files
+```{r}
+PALS_F <- read.csv("PALS_Factors.csv")
+```
+
+```{r}
+hist(PALS_F)
+```
+From the graphs, it appears that none of the constructs has a normal distribution. Self-efficacy and MG are left skewed. While PAV have two peaks, and per.App goals are not normaly distributed. 
+
+```{r}
+SALES_F <- read.csv("SALES_Factors.csv")
+```
+
+```{r}
+hist(SALES_F)
+
+```
+
+```{r}
+library(tidyverse)
+```
+Renaming duplicated factors. 
+
+```{r}
+SALES_F <- rename(SALES_F, SelfEfficacy_S = SelfEfficacy, MasteryGoals_S = MasteryGoals)
+PALS_F <- rename(PALS_F, SelfEfficacy_P = SelfEfficacy, MasteryGoals_P = MasteryGoals)
+```
+
+Selecting only appropriate columns 
+```{r}
+SALES_F <- select(SALES_F, ID,Gender:MasteryGoals_S)
+PALS_F <- select(PALS_F, ID:MasteryGoals_P)
+```
+
+
+Joining the two tables
+
+```{r}
+PALS_SALES_F <- inner_join(x = PALS_F, y = SALES_F, by= "ID")
+
+```
+#TO DO
+I'm left with 328 cases instead of 359 observations (when I merged the two data sets with the individual items. I may need to revisit how the factor scores were calcualted again)- this was probably due to the missing data. After imputing for the missing data, I m left with 358 cases. 
+
+#Installing packages and loading libraries
+
+```{r}
+
+library(corpcor); library(GPArotation); library(psych)
+library(boot); library(ggm); library(ggplot2); library(Hmisc);
+library(polycor); library(lavaan)
+```
+
+#Correlations to check how the facotrs match together. 
+
+subseting the dataset to be correlated
+
+```{r}
+PS_FCorMatrix <- select(PALS_SALES_F, SelfEfficacy_P: MasteryGoals_P, SelfEfficacy_S:MasteryGoals_S)
+```
+
+```{r}
+PS_factors_cor <- cor(PS_FCorMatrix[sapply(PS_FCorMatrix, is.numeric)], use='pairwise')
+```
+
+```{r}
+write.csv(PS_factors_cor, "PSFactors_Corr.csv")
+```
+
+#Notes on correlations
+
+The correaltions between SE from both instruments is 0.55. The MG from both instruments is 0.56. The highest correlations occured between MG and SE from PALS = 0.74 & SALES : 0.81. 
+
+TV and MG_S (SALES) : 0.89. 
+
+MG_S and TV are also highly correlated: 0.53.
+
+PApp and PAvoidance goals have a low correlations with the rest of variabels except for themselves. PApp and PAvoidance Goals in PALS are highly correlated: 0.86. 
+
+
+Loading libraries
+
+```{r}
+library(tidyverse) # For data wrangling
+library(lavaan) # For CFA/MI/SEM
+library(semPlot) # For CFA/MI/SEM
+library (semTools) # For CFA/MI/SEM
+library(OpenMx) # For SEM
+library(pastecs) # Needed to run normatlity tests
+library(car) # Needed to run Levene test
+library(lsr) # Navarro package for running psychology tests
+library(psych) # for key psychology stats
+library(effects) # Effects package, needed for the estimated means, includses lower/upper 95% conf limits
+options(scipen=99) # This is to indicate how many digits after the decimal, this one is for 2 digits, but can be changed
+
+```
+
+#CFA Models
+
+Defining the model (trying the 2 instruments out as two latents)
+
+```{r}
+
+latents.model_PS <- 'PALS =~ SelfEfficacy_P + PerfAvGoals + PerfAppGoals + MasteryGoals_P
+SALES =~ SelfEfficacy_S  + TaskValue + MasteryGoals_S '
+```
+
+
+```{r}
+PALS_SALESfit  <- cfa(latents.model_P,  data = PALS_SALES_F, se = "robust", test = "Satorra-Bentler")
+summary(PALS_SALES_F) #to view summary of the fit
+vartable(PALS_SALES_F) # to have the summary of variables converted to a dataframe
+parameterestimates(PALS_SALES_F) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters.
+summary(PALS_SALES_F ,fit.measures = TRUE)
+```
+
+To see a summary of the tests and esimtates of the model. It appears that the model fits better this way, due to the low covariance between self-efficacy_P and self-efficacy_S: 0.253. Also, between Masterygoals_p and masterygoals_S: 0.281
+
+```{r}
+CFA_PS_Factors <- summary(PALS_SALESfit ,fit.measures = TRUE)
+```
+
+Notes on the score: the scores indicate that the fit is not good.
+
+User Model versus Baseline Model:
+
+  Comparative Fit Index (CFI)                    0.725
+  Tucker-Lewis Index (TLI)                       0.555
+  
+  RMSEA:                                         0.34
+  The covariance between the two tools is low:   0.124
+  
+#CFA 2: Trying motivation as a whole latent 
+  
+```{r}
+latents.model2 <- 'Motivation =~ SelfEfficacy_P + PerfAvGoals + PerfAppGoals + MasteryGoals_P + SelfEfficacy_S  + TaskValue + MasteryGoals_S '
+```
+  
+```{r}
+PALS_SALESfit2  <- cfa(latents.model2, data = PALS_SALES_F,se = "robust", test = "Satorra-Bentler")
+summary(PALS_SALESfit2) #to view summary of the fit
+vartable(PALS_SALESfit2) # to have the summary of variables converted to a dataframe
+parameterestimates(PALS_SALESfit2) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters.
+summary(PALS_SALESfit2 ,fit.measures = TRUE)
+```
+
+Notes on the scores.
+
+When ran motivation is the main latent, the score of the fit indices decrease, which means that the fit even decreased. So it maybe better to have the factors as separate. Could try EFA to see. 
+
+User Model versus Baseline Model:
+
+  Comparative Fit Index (CFI)                    0.620
+  Tucker-Lewis Index (TLI)                       0.431
+  
+Also a negative variance appeared. 
+  
+#CFA 3: Will try to combine SE and MG together and see how the model looks like
+
+
+```{r}
+latents.model3 <- 'SelfEfficacy =~ SelfEfficacy_P + SelfEfficacy_S
+MasteryGoals =~ MasteryGoals_P + MasteryGoals_S
+PerfGoals =~ PerfAvGoals + PerfAppGoals
+Task_Value =~ TaskValue '
+```
+
+
+```{r}
+latents.model3.1 <- 'SelfEfficacy =~ SelfEfficacy_P + SelfEfficacy_S
+MasteryGoals =~ MasteryGoals_P + MasteryGoals_S + TaskValue
+PerfGoals =~ PerfAvGoals + PerfAppGoals'
+
+```
+
+
+```{r}
+PALS_SALESfit3.1  <- cfa(latents.model3.1, data = PALS_SALES_F, se = "robust", test = "Satorra-Bentler")
+summary(PALS_SALESfit3.1) #to view summary of the fit
+vartable(PALS_SALESfit3.1) # to have the summary of variables converted to a dataframe
+parameterestimates(PALS_SALESfit3.1) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters.
+summary(PALS_SALESfit3.1 ,fit.measures = TRUE)
+```
+User Model versus Baseline Model:
+
+  Comparative Fit Index (CFI)                    0.894
+  Tucker-Lewis Index (TLI)                       0.753
+  Root Mean Square Error of Approximation:
+
+  RMSEA                                          0.253
+  
+The score slightly improved, however, it is still not good. The same with the robust analysis. 
+
+```{r}
+modindices(PALS)
+```
+
+
+#CFA_3factormodel
+
+```{r}
+latents.modelthree <- 'SALES =~ SelfEfficacy_S + MasteryGoals_S + TaskValue 
+PerfGoals =~ PerfAvGoals + PerfAppGoals
+MG_SE  =~ SelfEfficacy_P + MasteryGoals_P '
+```
+
+```{r}
+PALS_SALESfit_three  <- cfa(latents.modelthree, data = PALS_SALES_F,se = "robust", test = "Satorra-Bentler")#stardard fit
+summary(PALS_SALESfit_three ) #to view summary of the fit
+vartable(PALS_SALESfit_three ) # to have the summary of variables converted to a dataframe
+parameterestimates(PALS_SALESfit_three ) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters
+summary(PALS_SALESfit_three  ,fit.measures = TRUE)
+```
+This model appeared to be the best fit!! However the RMSEA is still high :()
+
+User Model versus Baseline Model:               std         robust
+
+  Comparative Fit Index (CFI)                    0.967       0.953
+  Tucker-Lewis Index (TLI)                       0.937       0.911
+
+  Root Mean Square Error of Approximation:
+
+  RMSEA                                          0.132
+  
+ This model makes the best sense theoritically as well. All the elements of the SALES questionnaire fit nicely together, SE and MG from PALS fit nicely as well. However, performance approach goals describe negative aspects of motivation fit also nicely together. 
+ 
+The fit decreases when using the robust analysis, a -ve variance was also observed of value = -0.02 between 
+  
+checking modification indices to see what can be improved in the model
+```{r}
+modindices(PALS_SALESfit_three, sort. = TRUE)
+```
+  
+By looking at the mod. indices, it appeared that there is tension between between SE_P and SE_S (correlation of 0.34). Thus, I will put them together in one model to see if the fit improves.
+
+```{r}
+latents.modelfour <- 'SALES =~ MasteryGoals_S + TaskValue 
+PerfGoals =~ PerfAvGoals + PerfAppGoals
+MG_SE  =~ SelfEfficacy_P + SelfEfficacy_S + MasteryGoals_P '
+```
+
+```{r}
+PALS_SALESfitfour  <- cfa(latents.modelfour, data = PALS_SALES_F,se = "robust", test = "Satorra-Bentler")#stardard fit
+summary(PALS_SALESfitfour  ,fit.measures = TRUE)
+vartable(PALS_SALESfitfour) # to have the summary of variables converted to a dataframe
+parameterestimates(PALS_SALESfitfour) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters
+summary(PALS_SALESfitfour)
+
+```
+
+
+#Removing SE_S
+Based on the EFA SE_S loaded on a separate factor. So It's possible that it does not load with other inidcators. When removed it, the fit increased a lot. RMSEA is stil high.
+
+```{r}
+latents.modelfive <- 'SALES =~ MasteryGoals_S + TaskValue 
+PerfGoals =~ PerfAvGoals + PerfAppGoals
+MG_SE  =~ SelfEfficacy_P + MasteryGoals_P'
+```
+
+User Model versus Baseline Model:
+
+  Comparative Fit Index (CFI)                    0.986       0.984
+  Tucker-Lewis Index (TLI)                       0.965       0.959
+                                                                  
+  Robust Comparative Fit Index (CFI)                         0.987
+  Robust Tucker-Lewis Index (TLI)                            0.967
+
+
+Root Mean Square Error of Approximation:
+
+  RMSEA                                          0.101       0.091
+
+
+```{r}
+PALS_SALESfit5  <- cfa(latents.modelfive, data = PALS_SALES_F,se = "robust", test = "Satorra-Bentler")#stardard fit
+summary(PALS_SALESfit5 ,fit.measures = TRUE)
+vartable(PALS_SALESfit5) # to have the summary of variables converted to a dataframe
+parameterestimates(PALS_SALESfit5) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters
+
+
+```
+
+```{r}
+sink("model5.doc")
+print(cfa(latents.modelfive, data = PALS_SALES_F,se = "robust", test = "Satorra-Bentler"))#stardard fit
+summary(PALS_SALESfit5 ,fit.measures = TRUE)
+sink()
+```
+
+
+```{r}
+sink("Model4.doc")
+print(cfa(latents.modelfour, data = PALS_SALES_F,se = "robust", test = "Satorra-Bentler"))
+summary(PALS_SALESfitfour  ,fit.measures = TRUE)
+vartable(PALS_SALESfitfour)) # to have the summary of variables converted to a dataframe
+sink()
+```
+
+User Model versus Baseline Model:
+
+  Comparative Fit Index (CFI)                    0.883       0.844
+  Tucker-Lewis Index (TLI)                       0.776       0.702
+                                                                  
+  Robust Comparative Fit Index (CFI)                         0.883
+  Robust Tucker-Lewis Index (TLI)                            0.777
+
+```{r}
+modindices(PALS_SALESfitfour)
+```
+
+#USING DWLS (Diagnoally wieghted least squares)
+
+Fitting the model again using DWLS as the estimator 
+
+As per the suggestion of Xia and Yang (2018), DWLS is suggested for likert scale data (ordered categorical data) as it yields higher CFI and TLI and lower RMSEA.
+
+```{r}
+PALS_SALESfit_three  <- cfa(latents.modelthree, data = PALS_SALES_F, estimator = "DWLS")#stardard fit
+summary(PALS_SALESfit_three ) #to view summary of the fit
+vartable(PALS_SALESfit_three ) # to have the summary of variables converted to a dataframe
+parameterestimates(PALS_SALESfit_three ) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters
+summary(PALS_SALESfit_three  ,fit.measures = TRUE)
+```
+
+The CFI and TLA increased:
+User Model versus Baseline Model:
+
+  Comparative Fit Index (CFI)                    1.000
+  Tucker-Lewis Index (TLI)                       1.008
+
+Root Mean Square Error of Approximation:
+
+  RMSEA                                          0.000
+  
+Read more on DWLS 
+
+#EFA
+Since the CFA did not show a good fit in either models, I need to run EFA to see how the factors fit together. Accordinlgy, I will start with the covariance matrix to see how the factors correlate to one another and the possibility to having them together. 
+
+Preparing for EFA
+
+Running Barlette test on the correlation matrix in prep for FA. The p value shall be less than 0.05.
+A significant test tells us that the R-matrix is not an identity matrix(identity matrix is the case when variables are NOT related to each other and corr is zero); Therefore, if it is significant then it means that the correlations between variables are (overall) significantly different from zero, if Bartlett’s test is significant then it is good news (Field, 2009)
+
+
+```{r}
+cortest.bartlett(PS_factors_cor, n=358)
+```
+
+Running KMO test for the degree of common variance (ideally, a score of 0.5 or higher is good). values close to 1 indicates that patterns of correlations are relatively compact and so factor analysis should yield distinct and reliable factors.
+
+```{r}
+KMO(PS_factors_cor)
+```
+
+MSA means (Measure of sampling adequacy)
+
+The KMO tests for the sampling adequacy for each variable. The test measures sampling adequacy for each variable in the model. KMO value less than 0.6 indicates that sampling may not be adequate.> This probnlem occured with PerAv Goals & PerApp Goals, where the scores was 0.52. The closer the KMO value to zero, the more partial correlations there are in the sample. 
+
+```{r}
+pc6 <- principal(PS_factors_cor, nfactors = 6)
+pc6
+```
+The eignenvalues for the factors are good except for the last factor. SInce I have a total of 7 latents, it makes more sense to try out the two factors model.
+
+
+```{r}
+plot(pc6$values, type = "b")
+```
+
+```{r}
+fa.parallel(PS_factors_cor, n.obs= 358, fm = "ml", fa = "fa")
+```
+
+Export
+
+```{r}
+sink("screeplot.doc")
+print(fa.parallel(PS_factors_cor, n.obs= 358, fm = "ml", fa = "fa"))
+sink()
+```
+
+From the screeplot, it appears that 4 factors could work well. The parallel command recommended 4 factors. The problem is that I cannot work with four factors, since I do not have enough observations to cover each latent. For example, I only have one score for task value. 
+
+#EFA 4-factor model
+
+```{r}
+fivefactor <- fa(PS_factors_cor,n.obs = 359, nfactors = 5)
+fivefactor
+```
+
+#Best EFA (4 factor model)
+```{r}
+fourfactor <- fa(PS_factors_cor,n.obs = 359, nfactors = 4)
+fourfactor
+```
+
+```{r}
+sink("4factors.doc")
+print(fa(PS_factors_cor,n.obs = 359, nfactors = 4))
+sink()
+```
+
+This model produced the best fit, 
+
+Tucker Lewis Index of factoring reliability =  1.01
+The root mean square of the residuals (RMSR) is  0 
+The df corrected root mean square of the residuals is  NA 
+
+
+Will try the 3-factor model to test how it fits
+
+#EFA 3factor model
+
+```{r}
+threefactor <- fa(PS_factors_cor,n.obs = 358, nfactors = 3)
+threefactor
+```
+
+exporting EFA Analysis output
+
+```{r}
+sink("PALS_SALESF_EFA.doc")
+print(fa(PS_factors_cor,n.obs = 358, nfactors = 3))
+sink()
+```
+
+The fit scores decreased!!
+
+
+Tucker Lewis Index of factoring reliability =  0.787
+RMSEA index =  0.232 
+
+
+#EFA -2factor model
+
+```{r}
+twofactor <- fa(PS_factors_cor,n.obs = 328, nfactors = 2)
+twofactor
+```
+
+
+```{r}
+pc2 <- principal(PS_factors_cor, nfactors = 2)
+pc2
+```
+
+
+The fit of this model is very poor. Will try CFA 2 factor models clustering the highly correlated factors together. 
+
+Based on covariance matrix, it appears that SE,MG,TV all  fit nicely in one factor. while performance goals fit on the other. I will put them under motivation and measure this effect. It might not be a good idea to have PerfGoals as one latent since I have only two indicators to describe it!
+
+#CFA- 2factor model
+latent.model4, this model is based on the EFA. 
+
+```{r}
+latents.model4 <- 'Motivation =~ SelfEfficacy_P + SelfEfficacy_S + MasteryGoals_P + MasteryGoals_S + TaskValue 
+PerfGoals =~ PerfAvGoals + PerfAppGoals'
+```
+
+
+```{r}
+PALS_SALESfit4  <- cfa(latents.model4, data = PALS_SALES_F)#stardard fit
+summary(PALS_SALESfit4) #to view summary of the fit
+vartable(PALS_SALESfit4) # to have the summary of variables converted to a dataframe
+parameterestimates(PALS_SALESfit4) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters.
+summary(PALS_SALESfit4 ,fit.measures = TRUE)
+```
+User Model versus Baseline Model:
+
+  Comparative Fit Index (CFI)                    0.860
+  Tucker-Lewis Index (TLI)                       0.774
+  Root Mean Square Error of Approximation:
+
+  RMSEA                                          0.242
+  
+  still not working good. 
+  
+  
+
+```{r}
+
+```
+
+
+
+

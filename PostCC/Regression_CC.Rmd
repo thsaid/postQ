@@ -1,0 +1,410 @@
+---
+title: "Regression_CC"
+author: "Tamer Said"
+date: "25/07/2021"
+output: html_document
+---
+
+This file is dedicated to trialling out some regression analysis with the CC to get the basics of regression and interpreting the scores
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+PrePostCC <-read.csv("PrePostCC_wide.csv")
+```
+
+
+```{r}
+SALES_factors <- read.csv("SALES_Factors_28072021.csv")
+```
+
+
+```{r}
+SALES_Factors <- rename(SALES_factors, SelfEfficacy_S = SelfEfficacy, MasteryGoals_S = MasteryGoals)
+```
+
+```{r}
+PrePostInd <- read.csv("PrePostCCInd.csv")
+```
+
+```{r}
+PrePostInd <- PrePostInd %>%
+    mutate(Gain = PostScore - PreScore)
+```
+
+```{r}
+write.csv(PrePostInd, "PrePostGain.csv")
+```
+
+
+```{r}
+CC_SALES <- merge(PrePostInd, SALES_Factors, by = "ID")
+```
+
+```{r}
+CC_SALES <- dplyr::select(CC_SALES, -X.x, -X.y)
+```
+
+```{r}
+write.csv(CC_SALES, "CC_SALES_220821.csv")
+```
+
+```{r}
+library(car)
+library(psych)
+library(stats)
+library(dplyr)
+```
+
+#Trialing the total SALES score as the predictor 
+
+newModel<-lm(outcome ~ predictor(s), data = dataFrame, na.action = an action))
+
+```{r}
+SALESmodel2 <- lm(PostScore ~ SelfEfficacy + TaskValue + MasteryGoals, data = CC_SALES)
+summary(SALESmodel2)
+
+```
+Call:
+lm(formula = PostScore ~ SelfEfficacy + TaskValue + MasteryGoals, 
+    data = CC_SALES)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-9.7783 -2.7699  0.5604  3.1456  5.9021 
+
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)    
+(Intercept)   10.1433     0.1975  51.368   <2e-16 ***
+SelfEfficacy   0.5857     0.5214   1.123   0.2622    
+TaskValue     -0.9803     0.5809  -1.688   0.0925 .  
+MasteryGoals   0.7227     0.7300   0.990   0.3229    
+
+
+R2 has a value of 0.003 Because there is only one predictor,
+this value represents the square of the simple correlation between advertising and album
+sales – we can find the square root of R2 by running:
+
+```{r}
+sqrt(0.003)
+```
+
+This is the value of the correlation (0.05). it shows a very weak correlation between SALES score and the postcc score
+
+#Setting the outcome variable to be the net gain
+
+```{r}
+SALESmodel2 <- lm(Gain ~ SALES_Score, data = CC_SALES)
+summary(SALESmodel2)
+```
+This means that as the sales score increase by one unit, the gain in score increase by 0.01 units
+```{r}
+sqrt(0.005717)
+```
+It appears that the SALES score is slightly better in predicting the gained score than postcc.  The correlation between them is 0.07, still very low. 
+
+
+#Trying out multiple regression using SALES scales as predictors of the total score
+
+```{r}
+SALES_Factors<- read.csv("SALES_Factors.csv")
+```
+
+```{r}
+CC_SALES_Factors <-merge(CC_SALES, SALES_Factors, by = "ID")
+```
+
+Multiple regression using SALES factors
+
+```{r}
+SALESmodel3 <- lm(PostScore ~ SelfEfficacy + TaskValue + MasteryGoals + PreScore, data = CC_SALES)
+summary(SALESmodel3)
+```
+
+Pre sore shows to be the only significant predictor of post score. Prescore predicts 32% of the variance 
+#Prescore model (prescore as the outcome variable)
+
+```{r}
+SALESmodelPre <- lm(PreScore ~ SelfEfficacy + TaskValue + MasteryGoals + PostScore, data = CC_SALES)
+summary(SALESmodelPre)
+```
+
+ 
+ Very strange! task value has a -ve b value, which means that as there is one unit increase in task value, there is a 1.27 decrease in the score gained. 
+ 
+#Trying the same model with post score as the indicator 
+
+```{r}
+SALESmodel4 <- lm(PostScore ~ SelfEfficacy + TaskValue + MasteryGoals , data = CC_SALES)
+summary(SALESmodel4)
+```
+Little better, still TV has a -ve estimate
+ 
+ Does changing the order of predictors make a difference ? Let's try this out
+ 
+```{r}
+SALESmodel4.1 <- lm(PostScore ~  TaskValue + MasteryGoals + SelfEfficacy , data = CC_SALES_Factors)
+summary(SALESmodel4.1)
+```
+ 
+No difference.. changing the oder of predictors does not make a difference. 
+
+Getting standardized betas
+
+```{r}
+install.packages("QuantPsyc")
+```
+
+
+```{r}
+library(QuantPsyc)
+```
+
+```{r}
+lm.beta(SALESmodel4)
+```
+
+These estimates tell us the number of standard deviations by which the outcome will
+change as a result of one standard deviation change in the predictor. The standardized
+beta values are all measured in standard deviation units and so are directly comparable:
+therefore, they provide a better insight into the ‘importance’ of a predictor in the model
+
+#Calcualting conf. intervals
+```{r}
+confint(SALESmodel4)
+```
+
+Thr CI indicate that this model is poor, since the confidence intervals
+cross zero, indicating that in some samples the predictor has a negative relationship
+to the outcome whereas in others it has a positive relationship.
+
+#Loading PALS Scores
+```{r}
+PALS_Factors <- read.csv("PALS_Factors_renamed.csv")
+```
+
+```{r}
+PALS_Factors <- read.csv("PALS_Factors.csv")
+```
+
+Renaming the common vairables
+
+```{r}
+PALS_Factors <- rename(PALS_Factors, SelfEfficacy_P = SelfEfficacy, MasteryGoals_P = MasteryGoals)
+```
+
+```{r}
+write.csv(PALS_Factors, "PALS_Factors_renamed.csv")
+```
+
+Merging them
+
+```{r}
+CC_SALES_PALS <- merge(CC_SALES, PALS_Factors, by = "ID")
+```
+
+```{r}
+write.csv(CC_SALES_PALS, "CC_SALES_PALS.csv")
+```
+
+Cleaning the merged dfs
+
+```{r}
+CC_SALES_PALS <- dplyr::select(CC_SALES_PALS, -X, -X.1, -Gender.x)
+```
+
+renaming SALES values
+
+```{r}
+CC_SALES_PALS <- CC_SALES_PALS %>%
+        rename(SelfEfficacy_S = SelfEfficacy, MasteryGoals_S = MasteryGoals)
+```
+
+```{r}
+write.csv(CC_SALES_PALS, "CC_SALES_PALS_2707.csv")
+```
+
+#Regression for the PALS Scores for postscore
+
+```{r}
+PALS_Model <- lm(PostScore ~  SelfEfficacy_P + MasteryGoals_P + PerfAvGoals + PerfAppGoals , data = CC_SALES_PALS)
+summary(PALS_Model)
+```
+
+All the predictors are negative !! except for the self-efficacy !!
+
+#Regression for the PALS Scores for gain(as outcome variable)
+ 
+```{r}
+PALS_Model_gain <- lm(PostScore ~  SelfEfficacy_P + MasteryGoals_P + PerfAvGoals + PerfAppGoals + PreScore , data = CC_SALES_PALS)
+summary(PALS_Model_gain)
+```
+
+
+#Regression for the SALES & PALS scores
+
+
+```{r}
+SALES_PALSmodel1 <- lm(PostScore ~  TaskValue + MasteryGoals + SelfEfficacy + SelfEfficacy_P + MasteryGoals_P + PerfAvGoals + PerfAppGoals , data = CC_SALES_PALS)
+summary(SALES_PALSmodel1)
+```
+
+Running the same model on the net gain
+```{r}
+SALES_PALSmodel2 <- lm(Gain~  TaskValue.y + MasteryGoals + SelfEfficacy + SelfEfficacy_P + MasteryGoals_P + PerfAvGoals + PerfAppGoals , data = CC_SALES_PALS_Filtered)
+summary(SALES_PALSmodel2)
+```
+
+I noticed that some Gain scores are negative. For some reasons, students completed the pre questionnaire but not the post one. Others may have done worse in the second session. 
+
+#Filtering those who have gained in the post questionnaire
+
+```{r}
+CC_SALES_PALS_Filtered <- filter(CC_SALES_PALS, Gain > 0)
+```
+
+In this case, 202 observation remained from 323 observations
+
+Repeating the model again on the filtered data set
+
+```{r}
+SALES_PALSmodel3 <- lm(Gain~  TaskValue + MasteryGoals_S + SelfEfficacy_S + SelfEfficacy_P + MasteryGoals_P + PerfAvGoals + PerfAppGoals , data = CC_SALES_PALS_Filtered)
+summary(SALES_PALSmodel3)
+```
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-3.9061 -2.0095 -0.4709  1.2079  7.7328 
+
+Coefficients:
+               Estimate Std. Error t value Pr(>|t|)    
+(Intercept)      3.4928     0.1824  19.151   <2e-16 ***
+TaskValue       -1.0559     0.6680  -1.581    0.116    
+MasteryGoals_S   0.2847     0.9286   0.307    0.759    
+SelfEfficacy_S   0.7011     0.6536   1.073    0.285    
+SelfEfficacy_P   0.2046     0.4774   0.429    0.669    
+MasteryGoals_P   0.4391     0.4682   0.938    0.350    
+PerfAvGoals     -0.2139     0.3383  -0.632    0.528    
+PerfAppGoals     0.3204     0.2940   1.090    0.277    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.562 on 197 degrees of freedom
+Multiple R-squared:  0.05503,	Adjusted R-squared:  0.02145 
+F-statistic: 1.639 on 7 and 197 DF,  p-value: 0.1265
+
+Again, TV is negative
+
+```{r}
+cor(CC_SALES_PALS_Filtered$SALES_Score, CC_SALES_PALS_Filtered$Gain)
+```
+
+#Including data from StopSignal
+
+```{r}
+SS_means <- read.csv("StopSignalmeans.csv")
+```
+
+```{r}
+SS_means <- rename(SS_means, ID = subject_id)
+```
+
+```{r}
+CC_SA_PA_SS <- merge(CC_SALES_PALS, SS_means, by = "ID")
+```
+
+```{r}
+
+```
+
+#Correlations
+
+```{r}
+
+Cormat <- cor(CC_SA_PA_SS[sapply(CC_SA_PA_SS, is.numeric)], use='pairwise')
+```
+
+```{r}
+cor.plot(Cormat)
+```
+
+```{r}
+StopSignalmeans <- read.csv("StopSignalmeans_01082021.csv")
+```
+
+```{r}
+StopSignalmeans <- rename(StopSignalmeans, ID = subject_id)
+```
+
+```{r}
+CC_SALES_SS <- merge(StopSignalmeans, CC_SALES, by = "ID")
+```
+
+```{r}
+SS_CCModel <- lm(PostScore ~ SS_ACC, data = CC_SA_PA_SS)
+summary(SS_CCModel)
+```
+
+```{r}
+confint(SS_CCModel)
+```
+
+
+```{r}
+SALES_MeansModel <- lm(PostScore ~ MG_Mean + TV_Mean + SE_Mean + PreScore , data = CC_SALES_Means)
+summary(SALES_MeansModel)
+```
+#After re-calculating the efficiency score, will do another correlation to test the role of efficiency score. 
+
+```{r}
+Cor_CC_SALES_SS <- cor(CC_SALES_SS[sapply(CC_SALES_SS, is.numeric)], use='pairwise')
+```
+
+
+```{r}
+cor.plot(Cor_CC_SALES_SS)
+```
+
+According to the correlations, only the pre score and the SS_ACC had moderate correlations, 0.5 and 0.3 accordingly. 
+
+```{r}
+PrePost <- PrePost %>%
+    mutate(Gain = PostScore - PreScore)
+```
+
+
+Merging Gain, after convering efficiency scores together 
+
+```{r}
+CC_SALES_Means <- merge(PrePost, SALES_Means, by = "ID")
+```
+
+```{r}
+CC_SALESMeans_SS <- merge(CC_SALES_Means, StopSignalmeans, by = "ID")
+```
+
+```{r}
+Cor_CC_SALES_SS <- cor(CC_SALESMeans_SS[sapply(CC_SALESMeans_SS, is.numeric)], use='pairwise')
+```
+
+
+```{r}
+cor.plot(Cor_CC_SALES_SS)
+```
+
+For the gain scores, the only corelation that was moderate is the post score (0.36) and the prescore had a -ve correlation of (-.57) which is expected. 
+
+#My work on 22/8
+
+In this file, I aim to merge the average scores (re-calculated) and re-test the regressions. 
+
+
+
+
+

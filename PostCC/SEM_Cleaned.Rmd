@@ -1,0 +1,370 @@
+---
+title: "SEM_Cleaned"
+author: "Tamer Said"
+date: "11/10/2021"
+output: html_document
+---
+#   Loading Libraries
+```{r}
+library(tidyverse) # For data wrangling
+library(lavaan) # For CFA/MI/SEM
+library(semPlot) # For CFA/MI/SEM
+library (semTools) # For CFA/MI/SEM
+library(OpenMx) # For SEM
+
+```
+
+
+#Model 1: Full theortiical model
+```{r}
+model1 <-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+PALS =~ MG_P + SE_P
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG + PALS + Age
+EF ~ SALES + PG + PALS'
+
+SEMfit1<- sem(model1, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit1, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit1)
+varTable(SEMfit1)
+```
+Trying out SEMplot from Sacha: https://github.com/SachaEpskamp/SEM-code-examples/blob/master/CFA_fit_examples/lavaan/StarWars_semPlot.R
+
+```{r}
+semPaths(SEMfit1,
+    what = "est", # this argument controls what the color of edges represent. In this case, standardized parameters
+    whatLabels = "std", # This argument controls what the edge labels represent. In this case, parameter estimates
+    style = "lisrel", # This will plot residuals as arrows, closer to what we use in class
+    residuals = FALSE,
+    theme = "colorblind", # qgraph colorblind friendly theme
+    nCharNodes = 0, # Setting this to 0 disables abbreviation of nodes
+    reorder = FALSE, # This disables the default reordering
+    legend.cex = 0.5, # Makes the legend smaller
+    rotation = 2, # Rotates the plot
+    layout = "tree2", # tree layout options are "tree", "tree2", and "tree3"
+    cardinal = "lat cov", # This makes the latent covariances connet at a cardinal center point
+    curvePivot = TRUE, # Changes curve into rounded straight lines
+    sizeMan = 6, # Size of manifest variables
+    sizeLat = 10, # Size of latent variables
+    mar = c(2,5,2,5.5), # Figure margins
+    filetype = "pdf", width = 8, height = 6, filename = "SEM1" #  Save to PDF
+    )
+```
+ANother code fro SEMpath 
+```{r}
+semPaths(SEMfit1, what = "path", whatLabels = "std", style = "lisrel", layout = "spring", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = TRUE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 10, sizeMan2 = 10, sizeLat = 10, sizeLat2 = 10, sizeInt = 6, sizeInt2 = 4)
+```
+
+#MModel 2: Removing PALS
+
+```{r}
+model2 <-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG  + Age
+EF ~ SALES + PG '
+
+SEMfit2<- sem(model2, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit2, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit2)
+varTable(SEMfit2)
+semPaths(SEMfit2, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 6, sizeLat = 6, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+```
+
+#Model 3: Remvoing SALES - EF path
+
+```{r}
+model3 <-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG  + Age
+EF ~  PG '
+
+SEMfit3<- sem(model3, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit3, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit3)
+varTable(SEMfit3)
+semPaths(SEMfit3, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 6, sizeLat = 6, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+```
+
+#Model 4: After removing PG_EF path
+```{r}
+model4<-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG  + Age
+'
+
+SEMfit4<- sem(model4, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit4, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit4)
+varTable(SEMfit4)
+semPaths(SEMfit4, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 6, sizeLat = 6, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+```
+
+#Model 5: Adding age as predictor of EF 
+
+```{r}
+model5<-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG  + Age
+EF ~ Age
+'
+
+SEMfit5<- sem(model5, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit5, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit5)
+varTable(SEMfit5)
+semPaths(SEMfit5, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 6, sizeLat = 6, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+```
+
+#Model 5.1: Adding the link between PG & EF again
+```{r}
+model5.1<-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG  + Age
+EF ~ Age + PG
+'
+
+SEMfit5.1<- sem(model5.1, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit5.1, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit5.1)
+varTable(SEMfit5.1)
+semPaths(SEMfit5.1, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 6, sizeLat = 6, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+```
+
+#Model5.2: PG as mediator 
+
+```{r}
+model5.2<-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG  + Age
+EF ~ Age 
+PG ~ EF
+'
+
+SEMfit5.2<- sem(model5.2, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit5.2, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit5.2)
+varTable(SEMfit5.2)
+semPaths(SEMfit5.2, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 6, sizeLat = 6, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+```
+
+Testing the measurment model 
+
+```{r}
+model5.2<-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+'
+
+CFAfit5.2 <- sem(model5.2, data= FullData_Z, sample.nobs=248,
+meanstructure=TRUE, std.lv=TRUE)
+summary(CFAfit5.2, fit.measures=TRUE, estimates=FALSE)
+```
+The measurement model works very good. I need to searh how to assess the fit of the strcutural model. 
+
+#Model 6: EF as a predictor of SALES
+
+```{r}
+model5<-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG  + Age
+EF ~ Age
+'
+
+SEMfit5<- sem(model5, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit5, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit5)
+varTable(SEMfit5)
+semPaths(SEMfit5, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 6, sizeLat = 6, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+```
+
+#Model 5.1: Adding the link between PG & EF again
+```{r}
+model5.1<-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG  + Age
+EF ~ Age + PG
+'
+
+SEMfit5.1<- sem(model5.1, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit5.1, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit5.1)
+varTable(SEMfit5.1)
+semPaths(SEMfit5.1, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 6, sizeLat = 6, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+```
+Note :the link between PG & EF became insignificant 
+
+#Model5.2: PG as mediator 
+
+```{r}
+model6<-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG  + Age
+EF ~ Age 
+PG ~ EF
+'
+
+SEMfit6<- sem(model6, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit6,rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit6)
+varTable(SEMfit6)
+semPaths(SEMfit6, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 6, sizeLat = 6, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+```
+
+#Model 7: Covariance beteen EF & PG, SALES ~~EF
+
+```{r}
+model7<-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG  + Age
+EF ~ Age 
+EF ~~ PG
+'
+
+SEMfit7<- sem(model7, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit7,rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit7)
+varTable(SEMfit7)
+semPaths(SEMfit7, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 6, sizeLat = 6, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+```
+
+```{r}
+modindices(SEMfit5.2, sort. = TRUE)
+
+```
+
+#Model 8 allowing EF and age to covary rather than predict EF
+
+```{r}
+model8<-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG  + Age
+EF ~~ Age 
+EF ~ PG
+'
+
+SEMfit8<- sem(model8, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit8,rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit8)
+varTable(SEMfit8)
+semPaths(SEMfit8, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 6, sizeLat = 6, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+```
+Worse model fit: Higher RMSEA and SRMR 
+
+Model 9: The impact of removing AGE
+
+```{r}
+model9<-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG 
+PG  ~ EF
+'
+
+SEMfit9<- sem(model9, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit9,rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit9)
+varTable(SEMfit9)
+semPaths(SEMfit9, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 6, sizeLat = 6, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+```
+Model 9 fit is lower than model 8. 
+
+Model9.2: Setting post score as a manifest variable
+
+```{r}
+model9.2<-  'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+PostScore ~  EF + PreScore + SALES + PG + Age
+PG  ~ EF + Age
+EF ~ Age
+'
+
+SEMfit9.2<- sem(model9.2, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit9.2,rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit9.2)
+varTable(SEMfit9.2)
+semPaths(SEMfit9.2, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 6, sizeLat = 6, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+```
+
