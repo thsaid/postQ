@@ -161,7 +161,7 @@ To see a summary of the tests and esimtates of the model
 summary(SALESfit,fit.measures = TRUE,standardized=TRUE)
 ```
 
-SInce the values are categorical, one would need to you’ll want to look at expected vs. observed counts in each level instead of residual correlations. You can get that with lavTables(fit).
+Since the values are categorical, one would need to you’ll want to look at expected vs. observed counts in each level instead of residual correlations. You can get that with lavTables(fit).
 
 ```{r}
 lavTables(SALESfit)
@@ -180,6 +180,10 @@ kable(cor_table, digits=2) # makes a nice table and rounds everyhing to 2 digits
 
 
 Putting the data into a nice table (using knitR)
+```{r}
+library(knitr)
+```
+
 ```{r}
 parameterEstimates(SALESfit, standardized=TRUE) %>% 
   filter(op == "=~") %>% 

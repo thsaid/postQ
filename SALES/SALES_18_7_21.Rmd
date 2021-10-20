@@ -12,32 +12,76 @@ Q15-Q22	TV (8 questions)
 Q23-Q32	MG (9 questions)
 Notes: Questions 26 and 31 are repeated
 Questions 24 and 29 are repeated
+<<<<<<< Updated upstream
 There is a missing question: It is important to me that I improve my
 science skills.
+=======
+There is a missing question: "It is important to me that I improve my
+science skills"
+>>>>>>> Stashed changes
 
 
 #Loading the latest version of the post questionnaire (18/7): this file does not load!! I am not sure where the original file is!! The only version that I have now is the PostQ_filtered 12_7_2021.. it contains no duplicates and has all the IDs (415 in total)
 
 ```{r}
+<<<<<<< Updated upstream
 PostQ <- read.csv("postQ_filtered_12_7_2021.csv", header = T, na.strings=c(""," ","NA"))
+=======
+PostQ <- read.csv("PostQ_filteredComplete_12_7_2021.csv", header = T, na.strings=c(""," ","NA"))
+>>>>>>> Stashed changes
 ```
 
 
 I have to load tidyverse package first
 ```{r}
 library(tidyverse)
+<<<<<<< Updated upstream
+=======
+library(dplyr)
+>>>>>>> Stashed changes
 
 ```
 
 To select the coloumns I am interested in, I want to select the variables that have the SALES questions only (from Q7 to Q32)
 
 ```{r}
+<<<<<<< Updated upstream
 SALES <- select(PostQ,ID:Gender, Q07:Q32)
 ```
 
 
 ```{r}
 write.csv(SALES, "SALES_20210718.csv")
+=======
+SALES <- dplyr::select(PostQ,ID:Gender, Q07:Q32)
+```
+
+Importing the saved file (from excel)
+
+```{r}
+SALES <- read.csv("SALES_Cleaned_20210728.csv", header = T, na.strings=c(""," ","NA"))
+```
+
+```{r}
+rowSums(SALES)
+```
+
+Mutate sum score for each individual 
+
+
+```{r}
+SALES  %>% 
+Score = rowSums(Filter(is.numeric, SALES))
+
+```
+
+```{r}
+SALES <- cbind(SALES, Score = rowSums(Filter(is.numeric, SALES), na.rm = TRUE))
+```
+
+```{r}
+write.csv(SALES, "SALES_Scores_280721")
+>>>>>>> Stashed changes
 ```
 
 Scoring of the SALES Questions
@@ -46,7 +90,11 @@ Scoring of the SALES Questions
 scoring <- read.csv("scoring.csv")
 ```
 
+<<<<<<< Updated upstream
 #Work from here on the scoring 
+=======
+#Work from here on the scoring (28_7_2021)
+>>>>>>> Stashed changes
 
 ```{r}
 SALES_long <- pivot_longer(data = SALES,cols =Q7:Q32,names_to = "Question",values_to = "Response"  )
@@ -73,11 +121,22 @@ write.csv(SALES_joined, "SALES_long_scores_20210718.csv")
 
 Renaming the columns
  
+<<<<<<< Updated upstream
 
  
 ```{r}
 SALES_scores <- SALES_joined %>% 
              group_by(Q1) %>% 
+=======
+```{r}
+SALES_Scores_L <- read.csv("SALES_long_scores_20210718.csv")
+```
+
+
+```{r}
+SALES_scores <- SALES %>% 
+             group_by(ID) %>% 
+>>>>>>> Stashed changes
              summarise (SS = sum(score))
 ```
 
@@ -87,6 +146,13 @@ SALES_scores <- SALES_scores %>%
 ```
 
 ```{r}
+<<<<<<< Updated upstream
+=======
+write.csv(SALES_Scores, "SALES_SumScores_28072021.csv")
+```
+
+```{r}
+>>>>>>> Stashed changes
 SALES_scores <- SALES_scores[-1, ] 
 ```
 
@@ -98,14 +164,249 @@ str(SALES_joined)
 
 To check for missing values
 ```{r}
+<<<<<<< Updated upstream
 is.na(SALES_joined)
 ```
+=======
+is.na(SALES_Scores_L)
+```
+
+>>>>>>> Stashed changes
 ```{r}
 summary(SALES_joined)
 ```
 Renaming the variables in SALES Scores
 
 ```{r}
+<<<<<<< Updated upstream
 SALES_scores <- rename(SALES_scores, ID= Q1)
 ```
 
+=======
+SALES_Scores_L <- rename(SALES_Scores_L, ID= Q1, Picture = Q2, Color = Q3)
+```
+
+```{r}
+write.csv(SALES_Scores_L, "SALES_long_scores_20210728.csv")
+```
+
+#Converting Long format to wide format
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+SALES_Scores_L_cleaned <- dplyr::select(SALES_Scores_L, ID, Question : score, -Response)
+```
+
+```{r}
+spread(SALES_Scores_L_cleaned, ID, Question)
+```
+
+```{r}
+SALES_Scores_W <- pivot_wider(SALES_Scores_L_cleaned, names_from = Question, values_from = score)
+```
+
+```{r}
+duplicated(SALES_Scores_L)
+```
+
+some values are duplicated.. need to check that there are no duplicated IDs
+
+
+#Factor scores (refer to https://rdrr.io/cran/lavaan/man/lavPredict.html)
+
+
+#Factor analysis: 28_7_2021
+
+Need to start with the latent models first
+
+```{r}
+library(tidyverse) # For data wrangling
+library(lavaan) # For CFA/MI/SEM
+library(semPlot) # For CFA/MI/SEM
+library (semTools) # For CFA/MI/SEM
+library(OpenMx) # For SEM
+library(pastecs) # Needed to run normatlity tests
+library(car) # Needed to run Levene test
+library(lsr) # Navarro package for running psychology tests
+library(psych) # for key psychology stats
+library(effects) # Effects package, needed for the estimated means, includses lower/upper 95% conf limits
+options(scipen=99) # This is to indicate how many digits after the decimal, this one is for 2 digits, but can be changed
+```
+
+
+```{r}
+SALESmodel1 <- 'SelfEfficacy =~ Q08 +  Q07 + Q09 + Q10 + Q11 + Q12 + Q13 + Q14
+TaskValue =~ Q18 + Q15 + Q16 + Q17 + Q19 + Q20 + Q21 + Q22
+MasteryGoals =~ Q24 + Q23 + Q25 + Q26 + Q27 + Q28 + Q29 + Q31 + Q32'
+```
+Checking correlations between the questions
+
+```{r}
+SALES_Cor <- cor(SALES[sapply(SALES, is.numeric)], use='pairwise')
+```
+
+```{r}
+cor.plot(SALES_Cor)
+```
+
+```{r}
+SALESfit <- cfa(SALESmodel1, data = SALES, ordered = TRUE)#stardard fit
+summary(SALESfit, fit.measures = TRUE) #to view summary of the fit
+partable(SALESfit) # to have the summary of parameters converted to a dataframe
+vartable(SALESfit) # to have the summary of variables converted to a dataframe
+parameterestimates(SALESfit) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters.
+```
+
+
+THe ordered model has a better fit as witnessed by the fit indices.However, there is a message:  The variance-covariance matrix of the estimated parameters (vcov)
+    does not appear to be positive definite! The smallest eigenvalue
+    (= -3.066111e-17) is smaller than zero. This may be a symptom that the model is not identified.
+
+
+```{r}
+SALESfit <- cfa(SALESmodel1, data = SALES, ordered = TRUE) 
+head(lavPredict(SALESfit)) #first we need to define the model
+head(lavPredict(SALESfit, type = "ov")) #then we use the lavpredict function to compute estimated values for latent variables.
+idx <- lavInspect(SALESfit, "case.idx") #The lavInspect() functions can be used to inspect/extract information that is stored inside (or can be computed from) a fitted lavaan object. 
+SALESfscores <- lavPredict(SALESfit, newdata = SALES)
+## loop over factors
+for(fs in colnames(fscores)) {
+SALES[idx, fs] <- fscores[ , fs]
+} #I am not sure what does the last piece of code mean.
+head(SALES)
+summary(SALESfscores)
+```
+
+#Question:  By checking the idx cases, only 386 cases out of 415 were considered.  That's due to the missing values
+
+Converting fscores from lavaan matrix to dataframe
+```{r}
+SALESfscores.df <- as.data.frame(SALESfscores)
+```
+
+Saving SALES scores in a new file
+
+```{r}
+write.csv(SALESfscores.df, "SALESfscores28072021.csv")
+```
+
+#Matching the scores with the cases. To do so,I had to create row nos. in both cases to match them. 
+
+Add new coloumn to existing df (idx) row no. to identify the cases
+```{r}
+SALESfscores.df$rowno = idx
+```
+Creating a new coloumn for row no. in the SALES 
+
+```{r}
+SALES$rowno = seq.int(nrow(SALES))
+```
+
+```{r}
+SALESfscore_joined <- inner_join (x = SALES, y= SALESfscores.df, by = "rowno")
+SALESfscore_joined
+
+```
+
+```{r}
+SALES_Factors <- select(SALESfscore_joined,ID, SelfEfficacy:MasteryGoals)
+```
+
+Saving salesfacotrs to a new  file 
+```{r}
+write.csv(SALES_Factors, "SALES_Factors_28072021.csv")
+```
+
+#Checking normality of the fscores
+
+```{r}
+SALES_hist <- hist(SALESfscores.df)
+```
+#Adding normality curve
+
+```{r}
+
+SALES_hist + stat_function(fun = dnorm, args = list(mean = mean(PALS$sum,
+na.rm = TRUE), sd = sd(PALS_Q$score, na.rm = TRUE)), colour = "black", size = 1)
+```
+
+#Converting SALES scores to averages (30-7-2021)
+
+
+Q7-Q14	SE (8 questions)
+Q15-Q22	TV (8 questions)
+Q23-Q32	MG (9 questions)
+
+Notes: Questions 26 and 31 are repeated
+Questions 24 and 29 are repeated
+
+```{r}
+SALES <- SALES  %>%
+  mutate(ID = as.factor(ID))
+```
+
+```{r}
+write.csv(SALES_Means, "SALES_Means_3172021.csv")
+```
+
+
+```{r}
+SALES_Means2 <- read.csv("SALES_Means_3172021.csv",header = T, na.strings=c(""," ","NA"))
+```
+
+#Recoding Q07 for ID 4368F
+& for ID = 	
+4468
+
+```{r}
+SALES2[SALES2$ID== "4368F", "Q07"] <- "4"
+
+SALES2[SALES2$ID== "4468", "Q07"] <- "4"
+```
+
+
+```{r}
+SALES_Means <- na.omit(SALES2)  %>%
+ dplyr::group_by(ID) %>%
+ mutate(MG_Mean = mean(Q07:Q14)) %>%
+mutate(TV_Mean = mean(Q15:Q22)) %>%
+mutate(SE_Mean = mean(Q23:Q32)) 
+
+```
+
+
+Save ID as factor
+
+Selecting the means
+
+```{r}
+SALES_Means <- select(SALES_Means,ID, Score, MG_Mean, TV_Mean,SE_Mean)
+```
+
+```{r}
+write.csv(SALES_Means, "SALES_Means_3072021.csv")
+```
+
+Merging SALES means with PrePost Scores
+
+```{r}
+CC_SALES_Means <- merge(PrePost, SALES_Means, by = "ID")
+```
+
+```{r}
+CC_SALES_Means <- select(CC_SALES_Means, -X)
+```
+
+```{r}
+SALES_M_Cor <- cor(CC_SALES_Means[sapply(CC_SALES_Means, is.numeric)], use='pairwise')
+```
+
+```{r}
+cor.plot(SALES_M_Cor)
+```
+
+Same: The average scores have very low coorrelations with the pre and post scores. They do correlate with each other well.  WIll try out the regressions 
+>>>>>>> Stashed changes

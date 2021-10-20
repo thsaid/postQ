@@ -13,9 +13,15 @@ Q23-Q32	MG (8 questions), Question 30 is missing.
 Notes: Questions 26 and 31 are repeated
 Questions 24 and 29 are repeated
 
+<<<<<<< Updated upstream
 There is a missing question: It is important to me that I improve my
 science skills.
 
+=======
+There is a missing question: It is important to me that I improve my science skills.
+
+Q25 One of my goals is to master new science skills ()
+>>>>>>> Stashed changes
 #Loading Libraries
 
 
@@ -90,10 +96,16 @@ imputed_Data <- mice(SALES, m=5, maxit = 5, method = 'pmm', seed = 5) #m  – Re
 
 checking for the imputed values for Q25
 ```{r}
+<<<<<<< Updated upstream
 imputed_Data$imp$Q25 #these command shows the imputed data for Q04 for all the versions (datasets)
 ```
 
 
+=======
+imputed_Data$imp$Q25 #these command shows the imputed data for Q25 for all the versions (datasets)
+```
+
+>>>>>>> Stashed changes
 Choosing dataset no.3
 
 ```{r}
@@ -141,6 +153,11 @@ Checking the score distribution.
 ```{r}
 hist(SALES$total)
 ```
+<<<<<<< Updated upstream
+=======
+
+
+>>>>>>> Stashed changes
 ```{r}
 describe(SALES)
 ```
