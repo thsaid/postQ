@@ -1,0 +1,200 @@
+---
+title: "SALES_Imputed"
+author: "Tamer Said"
+date: "15/08/2021"
+output: html_document
+---
+Installing mice library
+
+```{r}
+library(mice)
+```
+
+uploading latest verion of SALES
+
+```{r}
+SALES <- read.csv("SALES_Cleaned_20210815.csv")
+```
+
+
+```{r}
+md.pattern(SALES)
+```
+
+Based on the graph, it appears that 365 cases are complete,while 20 cases are missing one item. 
+
+```{r}
+library(VIM)
+mice_plot <- aggr(SALES, col=c('navyblue','yellow'),
+                    numbers=TRUE, sortVars=TRUE,
+                    labels=names(SALES), cex.axis=.7,
+                    gap=3, ylab=c("Missing data","Pattern"))
+```
+
+
+Imputing data 
+
+```{r}
+imputed_SALES <- mice(SALES, m=6, maxit = 5, method = 'pmm', seed = 5) #m  – Refers to 5 imputed data sets (default is 5), maxit –  Refers to no. of iterations taken to impute missing values, deafult is 5. Seed: An integer that is used as argument by the set.seed() for offsetting the random number generator. Default is to leave the random number generator alone. method – Refers to method used in imputation. we used predictive mean matching 'pmm'
+```
+
+```{r}
+imputed_SALES$imp$Q25 #these command shows the imputed data for Q25 for all the versions (datasets)
+```
+
+From the perdictor matrix, it seems that ID and U_ID were used to predict the outcomes of the scores
+
+```{r}
+imputed_SALES
+```
+
+```{r}
+str(SALES)
+```
+
+
+```{r}
+str(SALES)
+```
+
+#Combining the imputed the imoputed  dataset with the original one
+
+```{r}
+SALES_comp <- complete(imputed_SALES, "long", inc = TRUE)
+```
+
+## labels observed data in blue and imputed data in red for Q25
+```{r}
+col <- rep(c("blue", "red")[1 + as.numeric(is.na(imputed_SALES$SALES$Q25))], 6)
+## plots data for Q25 by imputation
+stripplot(Q25 ~ .imp, data = SALES_comp, jit = TRUE, col = col, xlab = "imputation Number")
+```
+
+Selecting only relevant variables to make sure that mice is not using them in the predictor matrix.
+
+Running regression analysis to see which scores predict the average scores best out of the 5 data sets
+
+```{r}
+fitIMP <- with(imputed_SALES, lm(Average ~ Q07 + Q08 + Q09 + Q10  + Q11 + Q12 + Q13 + Q14 + Q15 + Q16 + Q17 + Q18 + Q19 + Q20 + Q21 + Q22 + Q23 + Q24 + Q25 + Q26 + Q27 + Q28 + Q29 + Q31 + Q32))
+summary(fitIMP)
+```
+
+```{r}
+summary(pool(fitIMP))
+```
+
+#Comparing the imputed data with the orignial one
+
+```{r}
+summary(SALES)
+```
+```{r}
+summary(SALES_comp)
+```
+The mean scores are very close.. however, I am not sure how to choose the pooled data set. 
+
+#Calcualte means and SD for the imputed data
+
+```{r}
+pool_mean <- with(SALES_comp, by(SALES_comp, .imp, function(x) c(mean(x$Q25),sd(x$Q25))))
+pool_mean
+```
+#Using the imputed data set to calcualte factor scores
+
+```{r}
+plot(imputed_SALES)
+```
+
+
+#Factor analysis: 28_7_2021
+
+Need to start with the latent models first
+
+```{r}
+library(tidyverse) # For data wrangling
+library(lavaan) # For CFA/MI/SEM
+library(semPlot) # For CFA/MI/SEM
+library (semTools) # For CFA/MI/SEM
+library(OpenMx) # For SEM
+library(pastecs) # Needed to run normatlity tests
+library(car) # Needed to run Levene test
+library(lsr) # Navarro package for running psychology tests
+library(psych) # for key psychology stats
+library(effects) # Effects package, needed for the estimated means, includses lower/upper 95% conf limits
+options(scipen=99) # This is to indicate how many digits after the decimal, this one is for 2 digits, but can be changed
+```
+
+```{r}
+SALESmodel1 <- 'SelfEfficacy =~ Q08 +  Q07 + Q09 + Q10 + Q11 + Q12 + Q13 + Q14
+TaskValue =~ Q18 + Q15 + Q16 + Q17 + Q19 + Q20 + Q21 + Q22
+MasteryGoals =~ Q24 + Q23 + Q25 + Q26 + Q27 + Q28 + Q29 + Q31 + Q32'
+```
+
+```{r}
+install.packages("Amelia")
+```
+
+```{r}
+library(Amelia)
+```
+
+Using cfa.mi function 
+
+```{r}
+SALESfitMI <- cfa.mi(SALESmodel1, data = SALES, ordered = TRUE, miPackage = "mice" , m = 6, seed = 5)
+```
+I receive the following Error when using the ordered = TRUE method. (for ordered caterogrical variables)
+
+The variance-covariance matrix of the estimated parameters (vcov)
+    does not appear to be positive definite! The smallest eigenvalue
+    (= -8.866074e-18) is smaller than zero. This may be a symptom that
+    the model is not identified.lavaan
+```{r}
+summary(SALESfitMI, fit.measures = TRUE) #to view summary of the fit
+summary(SALESfitMI, ci = FALSE, fmi = TRUE, output = "data.frame")
+partable(SALESfitMI) # to have the summary of parameters converted to a dataframe
+vartable(SALESfitMI) # to have the summary of variables converted to a dataframe
+parameterestimates(SALESfitMI) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters.
+```
+Calculating factor scores based on the MI dataset
+
+
+```{r}
+head(lavPredict(SALESfitMI)) #first we need to define the model
+head(lavPredict(SALESfitMI, type = "ov")) #then we use the lavpredict function to compute estimated values for latent variables.
+idx <- lavInspect(SALESfitMI, "case.idx") #The lavInspect() functions can be used to inspect/extract information that is stored inside (or can be computed from) a fitted lavaan object. 
+SALESfscores <- lavPredict(SALESfitMI, newdata = SALES)
+## loop over factors
+for(fs in colnames(fscores)) {
+SALES[idx, fs] <- fscores[ , fs]
+} #I am not sure what does the last piece of code mean.
+head(SALES)
+summary(SALESfscores)
+```
+
+
+
+
+Checking correlations between the questions
+
+```{r}
+SALES_Cor <- cor(SALES[sapply(SALES, is.numeric)], use='pairwise')
+```
+
+```{r}
+cor.plot(SALES_Cor)
+```
+
+
+Trying out the fiml function in CFA (it has to be ML, not ordered).If satorra.bentler style test is used, then list wise deletion will be used. 
+
+```{r}
+SALESFIMLT <- cfa(SALESmodel1, data = SALES, missing = "fiml")#stardard fit
+
+summary(SALESFIMLT, fit.measures = TRUE) #to view summary of the fit
+partable(SALESfit) # to have the summary of parameters converted to a dataframe
+vartable(SALESfit) # to have the summary of variables converted to a dataframe
+parameterestimates(SALESfit) #parameterEstimates() includes the estimates, standard errors, z value, p value, and 95% CIs for all model parameters.
+```
+
+

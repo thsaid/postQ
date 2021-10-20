@@ -210,6 +210,12 @@ Merging them
 CC_SALES_PALS <- merge(CC_SALES, PALS_Factors, by = "ID")
 ```
 
+
+```{r}
+CC_SALES_PALS_SS <- merge(CC_SALES_PALS, by = "ID")
+```
+
+
 ```{r}
 write.csv(CC_SALES_PALS, "CC_SALES_PALS.csv")
 ```
@@ -229,6 +235,46 @@ CC_SALES_PALS <- CC_SALES_PALS %>%
 
 ```{r}
 write.csv(CC_SALES_PALS, "CC_SALES_PALS_2707.csv")
+```
+
+```{r}
+library(tidyverse)
+```
+
+Merging Stop signal taks means
+
+```{r}
+SS_means <- read.csv("SS_Average_Scores.csv")
+```
+
+```{r}
+SS_means2 <- SS_means %>%
+    filter (Average.of.RTc>0)  %>%
+    rename(ID = Row.Labels)
+```
+
+```{r}
+CC_SALES_PALS_SS <- merge(CC_SALES_PALS,SS_means2, by = "ID")
+```
+
+
+```{r}
+write.csv(CC_SALES_PALS_SS, "CC_SALES_PALS_SS.csv")
+```
+
+
+Adding FM means (figure matching)
+
+```{r}
+FM_means <- read.csv("FM_means_230821.csv")
+```
+
+```{r}
+CC_SALES_PALS_SS_FM <- merge(CC_SALES_PALS_SS, FM_means, by = "ID")
+```
+
+```{r}
+write.csv(CC_SALES_PALS_SS_FM, "CC_SALES_PALS_SS_FM.csv")
 ```
 
 #Regression for the PALS Scores for postscore
@@ -299,7 +345,7 @@ Residual standard error: 2.562 on 197 degrees of freedom
 Multiple R-squared:  0.05503,	Adjusted R-squared:  0.02145 
 F-statistic: 1.639 on 7 and 197 DF,  p-value: 0.1265
 
-Again, TV is negative
+Again, TV is negative 
 
 ```{r}
 cor(CC_SALES_PALS_Filtered$SALES_Score, CC_SALES_PALS_Filtered$Gain)
@@ -400,11 +446,16 @@ cor.plot(Cor_CC_SALES_SS)
 
 For the gain scores, the only corelation that was moderate is the post score (0.36) and the prescore had a -ve correlation of (-.57) which is expected. 
 
+
 #My work on 22/8
 
 In this file, I aim to merge the average scores (re-calculated) and re-test the regressions. 
 
-
+COmparing the regression effect of EF on  gain score and post score 
+```{r}
+EF_CC <- lm(Gain ~  PostScore + SS_ACC + FM_ACC_mean, data = data)
+summary(EF_CC)
+```
 
 
 

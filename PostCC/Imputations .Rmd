@@ -1,0 +1,436 @@
+---
+title: "Imputations"
+author: "Tamer Said"
+date: "12/09/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(mice)
+```
+
+```{r}
+SALES <- read.csv("SALES20210815.csv")
+```
+Checking missing data pattenr
+```{r}
+md.pattern(SALES)
+```
+
+Checking the summaru of the data before imputaiton 
+
+```{r}
+summary(SALES)
+```
+```{r}
+SALESImp <- mice(SALES, m = 5, maxit = 50, meth= 'pmm', seed = 500)
+```
+
+```{r}
+summary(SALESImp)
+```
+
+
+```{r}
+write.csv(SALESImp, "SALESImp.csv")
+```
+ Did not work
+ 
+ Installing mice adds package
+```{r}
+install.packages("miceadds")
+```
+```{r}
+library(miceadds)
+
+```
+ 
+```{r}
+write.mice.imputation(mi.res=SALESImp, name="SALES_imp1" )
+```
+
+This command saved the output of the imputed data, but did not merge them into a single file
+
+Trying out a new command using new package sjmisc
+```{r}
+install.packages("sjmisc")
+```
+```{r}
+library(sjmisc)
+```
+
+```{r}
+SALES_Imp2 <- merge_imputations(
+  SALES,
+  SALESImp,
+  ori = SALES,
+  summary = c("none", "dens", "hist", "sd"),
+  filter = Q25
+)
+
+```
+
+Comparing the summary of the imputed vs. orginial data frame
+```{r}
+summary(SALES)
+summary(SALES_Imp)
+```
+There is a slight change in Q25, while the orginial data had a mean of 4.16, the imputed one had a mean of 3.96.
+
+
+Saving the output
+
+```{r}
+library(tidyverse)
+```
+
+
+Saving the imputed dataset (not sure why the IDs were removed), selecting only the relevant ones 
+
+```{r}
+write.csv(SALES_Imp, "SALESImp.csv")
+```
+
+Can do the cleaning in eexcel later...
+
+
+After saving the imputed verision, will need to calcualte the factor scores for all full version (415 participants)
+
+Loading lavvaan
+
+```{r}
+library(lavaan)
+```
+
+qfter cleaning the file in escel (remving the duplicated questions)
+
+```{r}
+write.csv(SALES_Imp2, "SALESImp_raw.csv")
+```
+
+
+```{r}
+SALES_Imp <- read.csv("SALESImp.csv")
+```
+
+
+
+Defining the model
+```{r}
+SALESmodel <- 'SelfEfficacy =~ Q08_imp +  Q07 + Q09_imp + Q10 + Q11_imp + Q12_imp + Q13_imp + Q14
+TaskValue =~ Q18_imp + Q15_imp + Q16 + Q17 + Q19_imp + Q20_imp + Q21_imp + Q22_imp
+MasteryGoals =~ Q24_imp + Q23_imp + Q25_imp + Q26_imp + Q27_imp + Q28_imp + Q29_imp + Q31_imp + Q32_imp'
+```
+
+```{r}
+summary(SALESfit, fit.measures = TRUE)
+parameterestimates(SALESfit)
+```
+
+
+```{r}
+SALESfit <- cfa(SALESmodel, data = SALES_Imp, ordered = TRUE) 
+head(lavPredict(SALESfit)) #first we need to define the model
+head(lavPredict(SALESfit, type = "ov")) #then we use the lavpredict function to compute estimated values for latent variables.
+idx <- lavInspect(SALESfit, "case.idx") #The lavInspect() functions can be used to inspect/extract information that is stored inside (or can be computed from) a fitted lavaan object. 
+SALESfscores <- lavPredict(SALESfit, newdata = SALES_Imp)
+## loop over factors
+for(fs in colnames(fscores)) {
+SALES_Imp[idx, fs] <- fscores[ , fs]
+} #I am not sure what does the last piece of code mean.
+head(SALES)
+summary(SALESfscores)
+```
+
+#Question:  By checking the idx cases, only 386 cases out of 415 were considered.  That's due to the missing values
+
+Converting fscores from lavaan matrix to dataframe
+```{r}
+SALESfscores.df <- as.data.frame(SALESfscores)
+```
+Add new coloumn to existing df (idx) row no. to identify the cases
+```{r}
+SALESfscores.df$rowno = idx
+```
+Creating a new coloumn for row no. in the SALES 
+
+```{r}
+SALES_Imp$rowno = seq.int(nrow(SALES_Imp))
+```
+
+```{r}
+SALESfscore_joined <- inner_join (x = SALES_Imp, y= SALESfscores.df, by = "rowno")
+SALESfscore_joined
+
+```
+
+```{r}
+SALES_Factors <- select(SALESfscore_joined,ID, SelfEfficacy:MasteryGoals)
+```
+
+Saving salesfacotrs to a new  file 
+```{r}
+write.csv(SALES_Factors, "SALES_Factors_Imp_09122021.csv")
+```
+
+#Examining PALS Questions 
+
+```{r}
+PALS <- read.csv("PALS20210912.csv")
+```
+
+Removing a participant that has not participated
+
+```{r}
+PALS2 <-PALS%>%
+dplyr::filter(PALS$ID != "4227")
+```
+
+```{r}
+PALS <- select(PALS, -X.1, -X)
+```
+
+```{r}
+PALS_Na <- filter(PALS, is.na(Q04))
+```
+
+Partipants who did not complete the survey at all: 4227, 4318, 4520, 4754, 4791
+
+```{r}
+PALS2 <-PALS %>% 
+dplyr::filter(ID != 4227)
+```
+
+```{r}
+PALS2 <-PALS %>% 
+dplyr::filter(ID != 4318)
+```
+
+```{r}
+PALS2 <-PALS %>% 
+dplyr::filter(ID != 4520)
+```
+
+
+```{r}
+PALS2 <-PALS %>% 
+dplyr::filter(ID != 4791)
+```
+
+I tried to remoce them, however, the no. of observations did not decrease..
+
+Starting imputation 
+
+```{r}
+
+```
+
+stuck here: I am not sure how to remove those who did not participate in the PALS at all. I want to remove them before the imputation start. 
+
+```{r}
+PALSImp <- mice(PALS2, m = 5, maxit = 50, meth= 'pmm', seed = 500)
+```
+
+```{r}
+PALS_Imp2 <- merge_imputations(
+  PALS,
+  PALSImp,
+  ori = PALS,
+  summary = c("none", "dens", "hist", "sd"),
+  filter = Q25
+)
+```
+
+```{r}
+summary(PALS_Imp2)
+summary(PALS)
+```
+By checking the summary of the imputed data vs. original are very close
+
+Saving PALSimputed data and cleaning it for further steps
+```{r}
+write.csv(PALS_Imp2, "PALSImp_raw_20210913.csv")
+```
+
+```{r}
+PALSImp <- read.csv("PALSImp_cleaned_20210913.csv")
+```
+
+```{r}
+PALSmodel <- 'MasteryGoals =~ Q01_imp + Q02_imp + Q03_imp + Q04_imp + Q05_imp
+PerfAppGoals =~ Q06_imp + Q07_imp + Q08_imp + Q09_imp + Q10_imp
+PerfAvGoals =~ Q11_imp + Q12_imp + Q13_imp + Q14_imp
+SelfEfficacy =~ Q15_imp + Q16_imp + Q17_imp + Q18_imp + Q19_imp'
+```
+
+Examining the fit of the imputed dataset
+
+```{r}
+summary(PALSfit, fit.measures = TRUE)
+parameterestimates(PALSfit)
+```
+
+
+```{r}
+PALSfit <- cfa(PALSmodel, data = PALSImp, ordered = TRUE) 
+head(lavPredict(PALSfit)) #first we need to define the model
+head(lavPredict(PALSfit, type = "ov")) #then we use the lavpredict function to compute estimated values for latent variables.
+idx <- lavInspect(PALSfit, "case.idx") #The lavInspect() functions can be used to inspect/extract information that is stored inside (or can be computed from) a fitted lavaan object. 
+PALSfscores <- lavPredict(PALSfit, newdata = PALSImp)
+## loop over factors
+for(fs in colnames(fscores)) {
+PALS_Imp[idx, fs] <- fscores[ , fs]
+} #I am not sure what does the last piece of code mean.
+head(PALS)
+summary(PALSfscores)
+```
+
+```{r}
+PALSfscores.df <- as.data.frame(PALSfscores)
+```
+Add new coloumn to existing df (idx) row no. to identify the cases
+```{r}
+PALSfscores.df$rowno = idx
+```
+Creating a new coloumn for row no. in the PALS 
+
+```{r}
+PALSImp$rowno = seq.int(nrow(PALSImp))
+```
+
+```{r}
+PALSfscore_joined <- inner_join (x = PALSImp, y= PALSfscores.df, by = "rowno")
+PALSfscore_joined
+
+```
+
+```{r}
+PALS_Factors <- select(PALSfscore_joined,ID, SelfEfficacy:MasteryGoals)
+```
+
+Saving PALSfacotrs to a new  file 
+```{r}
+write.csv(PALS_Factors, "PALS_Factors_Imp_09122021.csv")
+```
+
+```{r}
+PALS_Factors <- read.csv("PALS_Factors_Imp_09122021.csv")
+```
+
+renaming PALS factors
+
+```{r}
+PALS_Factors <- rename(PALS_Factors, SE_P = SelfEfficacy, PAV = PerfAvGoals, PAp = PerfAppGoals, MG_P = MasteryGoals)
+```
+
+```{r}
+SALES_Factors <- read.csv("SALES_Factors_Imp_09122021.csv")
+```
+
+```{r}
+SALES_Factors <- rename(SALES_Factors, SE_S = SelfEfficacy, MG_S = MasteryGoals, TV = TaskValue)
+```
+
+Merging PALS & SALES factors 
+```{r}
+PALS_SALES <- merge(PALS_Factors, SALES_Factors, by = "ID")
+```
+
+```{r}
+PALS_SALES <- select(PALS_SALES, -X.x, -X.y)
+```
+Checking correlations
+```{r}
+SALES_PALS_Cor <- cor(PALS_SALES[sapply(PALS_SALES, is.numeric)], use='pairwise')
+```
+
+Saving the dataframe
+
+```{r}
+write.csv(PALS_SALES, "PALS_SALES_factors_imp.csv")
+```
+
+
+#Examining PreCC Questions
+```{r}
+PreCC <- read.csv("PreCCWide.csv")
+```
+
+```{r}
+md.pattern(PreCC)
+```
+
+Merging data frames motivation and EF
+
+```{r}
+PALS_SALES <- read.csv("PALS_SALES_factors_imp.csv")
+```
+
+```{r}
+EFmeans <- read.csv("EF_meansImp_16092021.csv")
+```
+
+```{r}
+EFmeans <- rename(EFmeans, ID = subject_id)
+```
+
+```{r}
+PrePost <- read.csv("PrePostCCInd.csv")
+```
+
+```{r}
+EFmeans <- select(EFmeans, -X)
+PALS_SALES <- select(PALS_SALES, -X)
+PrePost <- select(PrePost, -X)
+```
+
+```{r}
+CC_EF_Mot <- Reduce(full_join, list(EFmeans, PALS_SALES, PrePost))
+```
+
+NA values are included, I need to use another command to select only the available data
+
+```{r}
+CC_EF_Mot2 <- Reduce(inner_join, list(EFmeans, PALS_SALES, PrePost,Demog))
+```
+
+```{r}
+Demog <- read.csv("Demog08092021.csv")
+```
+
+```{r}
+write.csv(FullData, "FullData_160921.csv")
+```
+
+```{r}
+CC_EF_Mot2 <- select(CC_EF_Mot2, -X, X.1)
+```
+
+```{r}
+FullData <- CC_EF_Mot2 %>%
+relocate(Age, .after = ID)  %>%
+relocate(Gender, .after = ID)
+```
+
+```{r}
+FullData <- select(FullData, -X.1, -StartDate, -ageyear)
+```
+
+Correlations
+
+```{r}
+Cor <-cor(FullData[sapply(FullData, is.numeric)], use='pairwise')
+
+```
+
+```{r}
+cor.plot(Cor)
+```
+
+
