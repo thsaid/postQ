@@ -27,18 +27,18 @@ covmat <- cor2cov(Cormat)
  
 ```{r}
 CC_SA_PA_SS <- CC_SA_PA_SS %>%
-  rename(SelfEfficacy_S = SelfEfficacy)
+  rename(SE_S = SelfEfficacy)
 ```
  
  Building measurement model (model 1 leaving unique construcst and combining like terms together)
  
 ```{r}
 
-CFAmodel <- 'MasteryGoals =~ MasteryGoals_S + MasteryGoals_P
-Task_Value =~ TaskValue
-SelfEfficacy =~ SelfEfficacy_P + SelfEfficacy_S
-PerfGoals =~ PerfAppGoals
-PerfAvoidance =~ PerfAvGoals
+CFAmodel <- 'MasteryGoals =~ MG_S + MG_P
+Task_Value =~ TV
+SelfEfficacy =~ SE_P + SE_S
+PerfGoals =~ PAp
+PerfAvoidance =~ PAV
 Inhibition =~ SS_ACC
 Learning =~ Gain
 Learning ~  Task_Value + MasteryGoals + SelfEfficacy + PerfGoals + PerfAvoidance + Inhibition'
@@ -67,10 +67,10 @@ lavResiduals(SEMfit)
  
  
 ```{r}
-model2 <- 'Motivation =~ MasteryGoals_S + MasteryGoals_P + TaskValue
-+ SelfEfficacy_P + SelfEfficacy_S
-+ PerfAppGoals
-PerfAvoidance =~ PerfAvGoals
+model2 <- 'Motivation =~ MG_S + MG_P + TV
++ SE_P + SE_S
++ PAp
+PerfAvoidance =~ PAV
 Inhibition =~ SS_ACC
 Learning =~ Gain
 Learning ~  Motivation + PerfAvoidance + Inhibition'
@@ -114,7 +114,7 @@ lavResiduals(SEMfit)
 
 ```{r}
 SALESmodelSEM <- 'MG =~ MasteryGoals
-TV =~ TaskValue 
+TV =~ TV 
 SE =~SelfEfficacy
 PostScore ~  MG + SE + TV'
 ```
@@ -149,10 +149,10 @@ lavResiduals(SEMfit)
 Dividing motivaiton into MG/TV, and SE and testing the net gain is the outcome variable 
 
 ```{r}
-model3 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
-SE =~SelfEfficacy_P 
-PG =~PerfAppGoals
-PerfAvoidance =~ PerfAvGoals
+model3 <- 'SALES =~ MG_S + TV + SE_S
+SE =~SE_P 
+PG =~PAp
+PerfAvoidance =~ PAV
 Inhibition =~ SS_ACC
 Gain ~  MG_TV + SE + PerfAvoidance + Inhibition'
 ```
@@ -180,10 +180,10 @@ lavResiduals(SEMfit)
 Dividing motivation into MG/TV, and SE and testing the postscore is the outcome variable 
 
 ```{r}
-model3.1 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
-SE =~SelfEfficacy_P 
-PG =~PerfAppGoals
-PerfAvoidance =~ PerfAvGoals
+model3.1 <- 'SALES =~ MG_S + TV + SE_S
+SE =~SE_P 
+PG =~PAp
+PerfAvoidance =~ PAV
 Inhibition =~ SS_ACC
 PostScore ~  SALES + SE + PG + PerfAvoidance + Inhibition'
 ```
@@ -209,10 +209,10 @@ This model is the best fit so far.. 2 changes so far: having postscore is the ou
 Trying the same model using gain score as the outcome variable 
 
 ```{r}
-model3.2 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
-SE =~SelfEfficacy_P 
-PG =~PerfAppGoals
-PerfAvoidance =~ PerfAvGoals
+model3.2 <- 'SALES =~ MG_S + TV + SE_S
+SE =~SE_P 
+PG =~PAp
+PerfAvoidance =~ PAV
 Inhibition =~ SS_ACC
 Gain ~  SALES + SE + PG + PerfAvoidance + Inhibition'
 ```
@@ -250,10 +250,10 @@ data <- rename(CC_SALES_PALS_SS_FM, SS_EFF = Eff2,  SS_ACC = Average.of.ACC ,FM_
 pathmodel.1 <- '
               #regressions
              Gain ~  PreScore + PostScore + FM_EFF + SS_EFF
-              FM_EFF ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
-           SS_EFF ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
-          PostScore ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
-          PreScore ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
+              FM_EFF ~ MG_S + TV + SE_S + SE_P + PAp
+           SS_EFF ~ MG_S + TV + SE_S + SE_P + PAp
+          PostScore ~ MG_S + TV + SE_S + SE_P + PAp
+          PreScore ~ MG_S + TV + SE_S + SE_P + PAp
 
               #covariances
               PreScore ~~ PostScore
@@ -268,14 +268,14 @@ Trying another model (just EF & motivation )
 ```{r}
 pathmodel.1 <- '
               #regressions
-            FM_ACC_mean ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
-           SS_ACC ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
+            FM_ACC_mean ~ MG_S + TV + SE_S + SE_P + PAp
+           SS_ACC ~ MG_S + TV + SE_S + SE_P + PAp
 FM_ACC_mean ~~  SS_ACC
 '
 ```
   
-  FM_ACC_mean ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
-           SS_EFF ~ MasteryGoals_S + TaskValue + SelfEfficacy_S + SelfEfficacy_P + PerfAppGoals
+  FM_ACC_mean ~ MG_S + TV + SE_S + SE_P + PAp
+           SS_EFF ~ MG_S + TV + SE_S + SE_P + PAp
               #covariances '
 
 ```{r}
@@ -304,8 +304,8 @@ It seems that the diff between the model implied cov and the observed one does n
 pathmodel2 <- '
               #regressions
               PostScore ~  FM_ACC_mean + SS_ACC 
-              FM_ACC_mean ~ MasteryGoals_S + TaskValue + SelfEfficacy_S 
-             SS_ACC ~ MasteryGoals_S + TaskValue + SelfEfficacy_S 
+              FM_ACC_mean ~ MG_S + TV + SE_S 
+             SS_ACC ~ MG_S + TV + SE_S 
 FM_ACC_mean ~~  SS_ACC
 '
 ```
@@ -339,13 +339,12 @@ lhs: left hand side of the eq (DV).. the MI indicates the expected change in chi
 #Testing indirect effect between motivation, EF and post cc
 
 ```{r}
-effects2 <- '
+effects <- '
               #regressions (redefing the indirect effects)
-              PostScore ~  F_P*FM_ACC_mean + S_P*SS_ACC 
-              FM_ACC_mean ~ M_F*MasteryGoals_S + T_F*TaskValue + S_F*SelfEfficacy_S 
-             SS_ACC ~ M_S*MasteryGoals_S + T_S*TaskValue + S_S*SelfEfficacy_S 
+              PostScore ~  EF_P*FM_EFF2 + S_P*SS_ACC 
+              FM_EFF2 ~ M_F*MG_S + T_F*TV + S_F*SE_S 
+              SS_ACC ~ M_S*MG_S + T_S*TV + S_S*SE_S 
 
-FM_ACC_mean ~~  SS_ACC
 
 #Indirect effects 
 
@@ -354,7 +353,7 @@ FM_ACC_mean ~~  SS_ACC
 '
 
 set.seed(62973)
-fit_eff <- sem(effects2, data=data, meanstructure=TRUE, se="bootstrap", bootstrap=1000)
+fit_eff <- sem(effects, data=FullData, meanstructure=TRUE, se="bootstrap", bootstrap=1000)
 parameterEstimates(fit_eff, boot.ci.type = "perc")
 parameterEstimates(fit_eff, boot.ci.type = "bca.simple") # biased corected CI..gold standard for mediation effect using bootstrapping 
 
@@ -364,17 +363,17 @@ The output shows that all the indirect effects are NOT significant they all pass
 
 Repeating SEM with allowing residuals to covary
 
-model3.2 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
-SE =~SelfEfficacy_P 
-PG =~PerfAppGoals
-PerfAvoidance =~ PerfAvGoals
+model3.2 <- 'SALES =~ MG_S + TV + SE_S
+SE =~SE_P 
+PG =~PAp
+PerfAvoidance =~ PAV
 Inhibition =~ SS_ACC
 Gain ~  SALES + SE + PG + PerfAvoidance + Inhibition'
 
 ```{r}
-model4 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
-PG =~ PerfAvGoals  + PerfAppGoals
-PALS =~ MasteryGoals_P + SelfEfficacy_P
+model4 <- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+PALS =~ MG_P + SE_P
 Inhibition =~ SS_ACC
 Switching  =~ FM_ACC_mean
 Learning =~ PostScore 
@@ -402,9 +401,9 @@ Testing CFA models including switching & inhibition as one latent
 
 ```{r}
 CFAmodel <- 
-   'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S 
-PG =~ PerfAvGoals  + PerfAppGoals
-PALS =~ MasteryGoals_P + SelfEfficacy_P
+   'SALES =~ MG_S + TV + SE_S 
+PG =~ PAV  + PAp
+PALS =~ MG_P + SE_P
 EF =~ SS_ACC + FM_ACC_mean
 Learning =~ PostScore + Gain'
 fit_CFA <- cfa(CFAmodel, data=data, meanstructure=TRUE, std.lv=TRUE)
@@ -418,9 +417,9 @@ Let's try having a factor for inhibition & another for switching
 
 ```{r}
 CFAmodel2 <- 
-   'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S 
-PG =~ PerfAvGoals  + PerfAppGoals
-PALS =~ MasteryGoals_P + SelfEfficacy_P
+   'SALES =~ MG_S + TV + SE_S 
+PG =~ PAV  + PAp
+PALS =~ MG_P + SE_P
 Inhibition =~ SS_ACC + Average.of.EFF
 Switching  =~ FM_ACC_mean + FM_EFF_mean
 Inhibition ~~ Switching
@@ -438,9 +437,9 @@ Notes on CFA model 2, the inclusion of the EFF score, highly distorted the model
 Returning back to mdoel 4 and adding more mediation effects (EF as mediators)
 Setting post score as the learning
 ```{r}
-model5 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
-PG =~ PerfAvGoals  + PerfAppGoals
-PALS =~ MasteryGoals_P + SelfEfficacy_P
+model5 <- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+PALS =~ MG_P + SE_P
 Inhibition =~ SS_ACC
 Switching  =~ FM_ACC_mean
 Learning =~ PostScore 
@@ -451,9 +450,9 @@ Switching ~ SALES + PALS '
 In 5.1, gain will be the measurement of learning instead of post score
 
 ```{r}
-model5.1 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
-PG =~ PerfAvGoals  + PerfAppGoals
-PALS =~ MasteryGoals_P + SelfEfficacy_P
+model5.1 <- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+PALS =~ MG_P + SE_P
 Inhibition =~ SS_ACC
 Switching  =~ FM_ACC_mean
 Learning =~ Gain
@@ -478,15 +477,15 @@ semPaths(SEMfit5.1, what = "path", whatLabels = "std", style = "lisrel", layout 
 # Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
 lavResiduals(SEMfit4)
 ```
-In model 5.1 (will gain is the learning predictor), the model fit is worse.. the oonly sig predictor of gain was inhibition. None of the other predictors had effect. 
+In model 5.1 (will gain is the learning predictor), the model fit is worse.. the only sig predictor of gain was inhibition. None of the other predictors had effect. 
 
 
 
 in model 6, I will restrict any direct effect between SALES and learning 
 ```{r}
-model6 <- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
-PG =~ PerfAvGoals  + PerfAppGoals
-PALS =~ MasteryGoals_P + SelfEfficacy_P
+model6 <- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+PALS =~ MG_P + SE_P
 Inhibition =~ SS_ACC
 Switching  =~ FM_ACC_mean
 Learning =~ PostScore 
@@ -517,17 +516,17 @@ Based on the modification indices, it appeared that switching could be regressed
 #Model 7: putting switching & inhibition under one latent 
 
 ```{r}
-model7<- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
-PG =~ PerfAvGoals  + PerfAppGoals
-PALS =~ MasteryGoals_P + SelfEfficacy_P
-EF =~ SS_ACC + FM_ACC_mean
+model7<- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+PALS =~ MG_P + SE_P
+EF =~ FM_EFF2 + SS_EFF + CB_EFF
 Learning =~ PostScore 
 Learning ~  EF + PreScore + SALES
 EF ~ SALES + PALS'
 ```
 
 ```{r}
-SEMfit7<- sem(model7, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+SEMfit7<- sem(model7, data = FullData, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
 summary(SEMfit7, rsq = TRUE, standardized = TRUE, fit = TRUE)
 fitmeasures(SEMfit7)
 varTable(SEMfit7)
@@ -544,37 +543,91 @@ lavResiduals(SEMfit7)
 model 7.1 Canceling the direct effect between SALES and learning
 
 ```{r}
-model7.1<- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
-PG =~ PerfAvGoals  + PerfAppGoals
-PALS =~ MasteryGoals_P + SelfEfficacy_P
-EF =~ SS_ACC + FM_ACC_mean
+model7.1<- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+PALS =~ MG_P + SE_P
+EF =~ FM_EFF2 + SS_EFF + CB_EFF
 Learning =~ PostScore 
 Learning ~  EF + PreScore 
 EF ~ SALES + PALS'
 ```
+
 ```{r}
-SEMfit7.1<- sem(model7.1, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+SEMfit7.1<- sem(model7.1, data = FullData, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
 summary(SEMfit7.1, rsq = TRUE, standardized = TRUE, fit = TRUE)
 fitmeasures(SEMfit7.1)
 varTable(SEMfit7.1)
 parameterEstimates(SEMfit7.1)
 ```
 
-
-All the models show an insignificant regression between EF & motivation. 
+The chisq difference between the 2 models is minimal (2.31) .. and the probability is not significant.. 0.14, which means that there is no significant difference between the two models. 
 
 ```{r}
-model8<- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
-PG =~ PerfAvGoals  + PerfAppGoals
-PALS =~ MasteryGoals_P + SelfEfficacy_P
-EF =~ SS_ACC + FM_ACC_mean
+lavTestLRT(SEMfit7.1, SEMfit7) #testing whether removing the direct effect improved the model or not.. 
+```
+
+All the models show an insignificant regression between EF & motivation
+
+
+#Model 1: Full model including PALS
+
+
+```{r}
+model8<- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+PALS =~ MG_P + SE_P
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
 Learning =~ PostScore 
-Learning ~  EF + PreScore + SALES
-EF ~ SALES + PALS'
+Learning ~  EF + PreScore + SALES + PG + PALS + Age
+EF ~ SALES + PG + PALS'
+
+SEMfit8<- sem(model8, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit8, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit8)
+varTable(SEMfit8)
+```
+
+
+Removing SALES as predictor
+
+```{r}
+model8PALS<- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+PALS =~ MG_P + SE_P
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + PG + PALS + Age
+EF ~ PG + PALS'
+```
+```{r}
+SEMfit8PALS<- sem(model8PALS, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit8PALS, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit8PALS)
+varTable(SEMfit8PALS)
+```
+
+#Testing the effect of removing PALS 
+
+```{r}
+model8SALES<- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+PALS =~ MG_P + SE_P
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+Learning =~ PostScore 
+Learning ~  EF + PreScore + PG + SALES + Age
+EF ~ PG + SALES '
 ```
 
 ```{r}
-SEMfit8<- sem(model8, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+SEMfit8SALES<- sem(model8SALES, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit8SALES, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit8SALES)
+varTable(SEMfit8SALES)
+```
+
+
+```{r}
+SEMfit8<- sem(model8, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
 summary(SEMfit8, rsq = TRUE, standardized = TRUE, fit = TRUE)
 fitmeasures(SEMfit8)
 varTable(SEMfit8)
@@ -592,20 +645,25 @@ lavResiduals(SEMfit7)
 modindices(SEMfit8, sort. = TRUE)
 ```
 
-Model 8.1: will allow for the direct relation between PG & Learning 
 
 ```{r}
-model8.1<- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
-PG =~ PerfAvGoals  + PerfAppGoals
-PALS =~ MasteryGoals_P + SelfEfficacy_P
-EF =~ SS_ACC + FM_ACC_mean
-Learning =~ PostScore 
-Learning ~  EF + PreScore + SALES + PG
-EF ~ SALES + PALS'
+lavTestLRT(SEMfit7, SEMfit8) #testing whether removing the direct effect improved the model or not.. 
 ```
+It seems that model 8 has a better fit when comparing chi-sq. difference and pvalue, this shoows that including the link between PG & postscore is better. 
+
+Model 8.1: Allowing SE_S & SE_P to covary 
+```{r}
+model8.1 <- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z+ SS_EFF_Z + CB_EFF_Z
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG + Age
+EF ~ PG'
+```
+BY allowing the residuals to covary, the model fit improved alot from 0.96 to 0.98 and RMSEA too 0.04
 
 ```{r}
-SEMfit8.1<- sem(model8.1, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+SEMfit8.1<- sem(model8.1, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
 summary(SEMfit8.1, rsq = TRUE, standardized = TRUE, fit = TRUE)
 fitmeasures(SEMfit8.1)
 varTable(SEMfit8.1)
@@ -620,37 +678,123 @@ semPaths(SEMfit8.1, what = "path", whatLabels = "std", style = "lisrel", layout 
 lavResiduals(SEMfit7)
 ```
 
+```{r}
+modelcopy <- 'Learning=~ PostScore
 
-Mod indices suggested a covariance between SE_S & SE_P. WIll attempt to have all motivational variables under one latent
+EF=~FM_EFF_Z+SS_EFF_Z+CB_EFF_Z
+
+PG=~PAp+PAV
+
+AGE=~Age
+
+Pre_Score=~PreScore
+
+SALES=~MG_S+TV+SE_S
+
+Learning~EF+PG+AGE+Pre_Score+SALES'
+```
+
 
 ```{r}
-model9<- '
-PG =~ PerfAvGoals  + PerfAppGoals
-Motivation  =~  MasteryGoals_P + SelfEfficacy_P + MasteryGoals_S + TaskValue + SelfEfficacy_S
-EF =~ SS_ACC + FM_ACC_mean
-Learning =~ PostScore 
-Learning ~  EF + PreScore + Motivation
-EF ~ Motivation'
+SEMfitcopy<- sem(modelcopy, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfitcopy, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfitcopy)
+varTable(SEMfitcopy)
+parameterEstimates(SEMfitcopy)
 ```
 
 ```{r}
-SEMfit9<- sem(model9, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+model9<-'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG + Age'
+```
+
+
+```{r}
+SEMfit9<- sem(model9, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
 summary(SEMfit9, rsq = TRUE, standardized = TRUE, fit = TRUE)
 fitmeasures(SEMfit9)
 varTable(SEMfit9)
 parameterEstimates(SEMfit9)
 ```
-Very poor fit when having all motiv. variabels under one latent (esp SALES & PALS)
+
+```{r}
+compare_performance(SEMfit9, SEMfit8.1)
+ %>%
+  print_md()
+```
+```{r}
+library(see)
+plot(compare_performance(SEMfit9, SEMfit8.1))
+```
+
+Model9_age_EF
+```{r}
+model9.3<-'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG + Age
+EF ~ Age + PG'
+SEMfit9.3<- sem(model9.3, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit9.3, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit9.3)
+varTable(SEMfit9.3)
+parameterEstimates(SEMfit9.3)
+```
+
+
+```{r}
+SEMfit9<- sem(model9, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit9, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit9)
+varTable(SEMfit9)
+parameterEstimates(SEMfit9)
+# Plot the model - this model plot below shows up as a black & white plot with standardized parameter estimates
+semPaths(SEMfit9, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 5, sizeLat = 5, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit7)
+```
+
+The model improved after removing the mediated effect ()
+Comparing the model with age and that is without
+
+
+```{r}
+lavTestLRT(SEMfit9, SEMfit9.3) #testing whether removing the direct effect improved the model or not.
+```
+```
+
+
+
+Testing the nested models (8.1 & 9)
+
+```{r}
+lavTestLRT(SEMfit8.1, SEMfit9) #testing whether removing the direct effect improved the model or not.
+```
+```{r}
+resid(SEMfit9, type="normalized")
+$`type`
+[1] "normalized"
+```
+Notes on residual covariance: values  > +/- 2 is meanigful. Nothing to worry about here.. all the values are less than 2. 
 
 Can I have the outcome as a manifest variable? will try this out
 ```{r}
-model8.2<- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
-PG =~ PerfAvGoals  + PerfAppGoals
-PALS =~ MasteryGoals_P + SelfEfficacy_P
+model8.2<- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+PALS =~ MG_P + SE_P
 EF =~ SS_ACC + FM_ACC_mean
 PostScore  ~  EF + PreScore + SALES + PG
 EF ~ SALES + PALS'
 ```
+
 
 ```{r}
 SEMfit8.2<- sem(model10, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
@@ -663,28 +807,23 @@ Model 10: removing all motiv. variables to chekc the quality of the model
 
 ```{r}
 model10<- '
-EF =~ SS_ACC + FM_ACC_mean
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z
 PostScore  ~  EF + PreScore 
 '
-SEMfit10<- sem(model10, data = data, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+SEMfit10<- sem(model10, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
 summary(SEMfit10, rsq = TRUE, standardized = TRUE, fit = TRUE)
 fitmeasures(SEMfit10)
 varTable(SEMfit10)
 parameterEstimates(SEMfit10)
 ```
-```{r}
-lavTestLRT(SEMfit7.1, SEMfit7) #testing whether removing the direct effect improved the model or not.. 
-```
-The chisq difference between the 2 models is minimal.. and the probability is not significant. 
-
 
 Trying out motv. as predictors of prescores
 
 ```{r}
-model11<- 'SALES =~ MasteryGoals_S + TaskValue + SelfEfficacy_S
-PG =~ PerfAvGoals  + PerfAppGoals
-PALS =~ MasteryGoals_P + SelfEfficacy_P
-EF =~ SS_ACC + FM_ACC_mean
+model11<- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+PALS =~ MG_P + SE_P
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z
 PreScore ~ SALES + PALS + PG + EF
 PostScore  ~  EF + PreScore 
 EF ~ SALES + PALS'
@@ -698,17 +837,308 @@ varTable(SEMfit11)
 parameterEstimates(SEMfit11)
 ```
 
+#Testing indirect effects
 
-Partial correlations
+
+```{r}
+Ind_model <- '
+SALES =~ MG_S + TV + SE_S
+PALS =~ MG_P + SE_P
+EF =~ FM_EFF2 + SS_EFF + CB_EFF
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PG
+
+Ind_S :=  S_EF
+Ind_P := P_EF
+Ind_PG := PG_EF
+total_Ind := P_EF*S_EF*PG_EF
+
+EF ~ PALS *P_EF + SALES*S_EF + PG*PG_EF + PreScore*Pre
+Learning ~ SALES*S_L + PALS *P_L + PG*PG_L
+dir:= P_L + S_L+PG_L+Pre
+'
+
+```
+
+PG_ind <- ' SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z
+
+PostScore ~  EF_Po*EF + S_Po*SALES + PG_Po*PG + PreScore
+EF ~ PG_EF*PG 
+
+#Indirect effects
+PG_ind := PG_EF
+dir := S_Po +  EF_Po - PG_Po 
+'
+
+```{r}
+Ind_model <- ' SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z
+
+PostScore ~  EF_Po*EF + S_Po*SALES + PG_Po*PG + PreScore
+EF ~ PG_EF*PG + S_EF*SALES
+
+#Indirect effects
+PG_ind := PG_EF*S_EF*SALES
+dir := S_Po +  EF_Po - PG_Po
+'
+```
+#Indirect effects
+
+
+```{r}
+set.seed(5000)
+fit_ind <- sem(Ind_model, data= FullData_Z, meanstructure=TRUE, se="bootstrap", bootstrap=1000)
+parameterEstimates(fit_ind, boot.ci.type = "perc")
+parameterEstimates(fit_ind, boot.ci.type = "bca.simple") # biased corected CI..gold standard for mediation effect using bootstrapping 
+```
+
+Calculating Z scores
+
+```{r}
+FullData %>% 
+FM_EFF_Z <- scale(FM_EFF2, center = TRUE, scale = TRUE) %>%
+SS_EF_Z <- scale(SS_EFF, center = TRUE, scale = TRUE)
+CB_EFF_Z <- scale(CB_EFF, center = TRUE, scale = TRUE)
+```
+
+
+
+#Testing Mediation (using Buchanan)
+
+Testing the direct effect between EF & Post score (already established in previous moodels )
+
+```{r}
+cpath = lm(PostScore ~ SS_EFF, data = FullData)
+summary(cpath)
+```
+```{r}
+#testing the relation between SE & SS_EFF
+
+apath = lm(SE_S ~ SS_EFF, data = FullData)
+summary(apath)
+```
+
+
+THis approach however, is not fully appropriate, since it does not bear in mind the relation between the latents. 
 
 ```{r}
 library(ppcor)
 library(corrplot)
-cor.mat <- pcor(data[sapply(data, is.numeric)])
+cor.mat <- pcor(FullData[sapply(FullData, is.numeric)])
 ```
 
 ```{r}
 corrplot(data)
+```
+
+```{r}
+corrplot(FullData)
+```
+
+#19/9: Loading Z scores of Efficiency to avoid the huge gap between the tasks
+
+```{r}
+FullData_Z <- read.csv("FullData_Z-_190921.csv")
+```
+Model10: Removing PALS and examining the link between PG & Postscore, having EF as mediator, while removing link between SALES & EF (since it was not significant)
+
+```{r}
+model10<- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z
+PostScore  ~  EF + PreScore + SALES + PG + Age
+EF ~ PG '
+```
+
+```{r}
+SEMfit10<- sem(model10, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit10, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit10)
+varTable(SEMfit10)
+parameterEstimates(SEMfit10)
+
+semPaths(SEMfit10, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 5, sizeLat = 5, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit10)
+```
+keeping also SALES & EF
+```{r}
+model10.1<- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z
+PostScore  ~  EF + PreScore + SALES + PG + Age
+EF ~ PG + SALES'
+```
+
+```{r}
+SEMfit10.1<- sem(model10.1, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit10.1, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit10.1)
+varTable(SEMfit10.1)
+parameterEstimates(SEMfit10.1)
+```
+
+```{r}
+semPaths(SEMfit10.1, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 5, sizeLat = 5, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+```
+
+Model 11: Examining model 10, without the link between EF & PG. 
+
+```{r}
+model11 <- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z
+PostScore  ~  EF + PreScore + SALES + PG + Age  '
+```
+
+```{r}
+SEMfit11<- sem(model11, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit11, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit11)
+varTable(SEMfit11)
+parameterEstimates(SEMfit11)
+```
+
+
+```{r}
+model11.1 <- 'SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z
+PostScore  ~  EF + PreScore + SALES + PG + Age  '
+```
+
+```{r}
+SEMfit11.1<- sem(model11.1, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit11.1, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit11.1)
+varTable(SEMfit11.1)
+parameterEstimates(SEMfit11.1)
+```
+
+
+```{r}
+SEMfit11<- sem(model11, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit11, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit11)
+varTable(SEMfit11)
+parameterEstimates(SEMfit11)
+
+semPaths(SEMfit11.1, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 5, sizeLat = 5, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit11)
+```
+
+```{r}
+lavTestLRT(SEMfit10, SEMfit11)
+```
+
+```{r}
+PG_ind2 <- ' SALES =~ MG_S + TV + SE_S
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z
+
+PostScore ~  EF_Po*EF + S_Po*SALES + PG_Po*PG + PreScore + Age
+EF ~ PG_EF*PG 
+
+#Indirect effects
+PG_ind := PG_EF*EF_Po
+dir := S_Po +  EF_Po - PG_Po 
+#Total effect 
+total := (PG_EF*EF_Po) +S_Po +  EF_Po - PG_Po 
+
+'
+```
+
+```{r}
+fitPG_ind2<- sem(PG_ind2 , data = FullData_Z, se = "bootstrap")
+summary(fitPG_ind2, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(fitPG_ind2)
+varTable(fitPG_ind2)
+parameterEstimates(fitPG_ind2)
+```
+
+
+```{r}
+fitPG_ind<- sem(PG_ind2 , data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(fitPG_ind, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(fitPG_ind)
+varTable(fitPG_ind)
+parameterEstimates(fitPG_ind)
+```
+
+
+#22/09 code, examining full model inlcuding PALS to decide whether to include them or not and comparing it with moodel 9 that did not have it. 
+
+```{r}
+model12<- 'SALES =~ MG_S + TV + SE_S
+PALS =~ MG_P + SE_P
+Learning =~ PostScore 
+Learning ~  EF + PreScore + SALES + PALS + PG + Age
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z
+EF ~ SALES + PALS + PG
+ '
+```
+
+
+```{r}
+SEMfit12<- sem(model12, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit12, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit12)
+varTable(SEMfit12)
+parameterEstimates(SEMfit12)
+
+semPaths(SEMfit12, what = "path", whatLabels = "std", style = "lisrel", layout = "tree", 
+         rotation = 2, curve = 1, curvature = 6, 
+         intercepts = FALSE, residuals = FALSE, thresholds = FALSE, 
+         nCharNodes = 10, nCharEdges = 0, 
+         sizeMan = 5, sizeMan2 = 5, sizeLat = 5, sizeLat2 = 5, sizeInt = 4, sizeInt2 = 4)
+# Check for correlated residuals in the model (note there are none, so no correlated residuals in the model)
+lavResiduals(SEMfit12)
+```
+
+                
+Let's test model 13 (inlcuding age)
+
+```{r}
+model13 <- 'SALES =~ MG_S + TV + SE_S
+PostScore ~  EF + PreScore + SALES + PG + Age
+PG =~ PAV  + PAp
+EF =~ FM_EFF_Z + SS_EFF_Z + CB_EFF_Z 
+EF ~  PG + SALES
+'
+```
+
+
+```{r}
+SEMfit13<- sem(model13, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit13, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit13)
+varTable(SEMfit13)
+parameterEstimates(SEMfit13)
+```
+
+```{r}
+set.seed(62973)
+fit_eff <- sem(PG_ind, data=FullData_Z, meanstructure=TRUE, se="bootstrap", bootstrap=1000)
+parameterEstimates(fit_eff, boot.ci.type = "perc")
+parameterEstimates(fit_eff, boot.ci.type = "bca.simple") # biased corected CI..gold standard for mediation effect using bootstrapping 
 ```
 
 
