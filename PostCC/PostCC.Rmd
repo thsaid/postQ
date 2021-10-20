@@ -397,7 +397,7 @@ PreCC_Individuals <- read.csv("PreCC_Individuals_12_7_2021.csv")
 #Joining both tables to compare the scores of individuals
 
 ```{r}
-PrePostInd <- inner_join(PostCC_Individual, PreCC_Individuals, c("ID"))
+PrePostInd <- inner_join(PostCC, PreCC_Individuals, c("ID"))
 ```
 365 observationns are retained from this 
 ```{r}
@@ -405,7 +405,7 @@ PrePostInd <- select(PrePostInd, -X)
 ```
 
 ```{r}
-write.csv(PrePostInd, "PrePostCCInd_12_7_2021.csv")
+write.csv(PrePostInd, "PrePostCCInd_20_10_2021.csv")
 ```
 
 ```{r}
@@ -1014,6 +1014,11 @@ PostCCpoly_model_4 = fa(PostCC_Cor, nfactor=4, n.obs= 413, fm="uls", rotate = "n
 PostCCpoly_model_4
 ```
 
+#Redoing the file again on the 20th of Oct Mering pre and post
+
+```{r}
+PostCC <- read.csv("PostCC_Ind20_10_21.csv")
+```
 
 
 
