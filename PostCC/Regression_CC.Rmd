@@ -44,6 +44,7 @@ write.csv(PrePostInd, "PrePostGain.csv")
 ```
 
 
+
 ```{r}
 CC_SALES <- merge(PrePostInd, SALES_Factors, by = "ID")
 ```
@@ -53,7 +54,7 @@ CC_SALES <- dplyr::select(CC_SALES, -X.x, -X.y)
 ```
 
 ```{r}
-write.csv(CC_SALES, "CC_SALES_220821.csv")
+write.csv(CC_SALES, "CC_SALES_20211021.csv")
 ```
 
 ```{r}
@@ -124,7 +125,7 @@ CC_SALES_Factors <-merge(CC_SALES, SALES_Factors, by = "ID")
 Multiple regression using SALES factors
 
 ```{r}
-SALESmodel3 <- lm(PostScore ~ SelfEfficacy + TaskValue + MasteryGoals + PreScore, data = CC_SALES)
+SALESmodel3 <- lm(PostScore ~ SE_S + TV + MG_S + PreScore, data = CC_SALES)
 summary(SALESmodel3)
 ```
 
@@ -194,14 +195,14 @@ PALS_Factors <- read.csv("PALS_Factors_renamed.csv")
 PALS_Factors <- read.csv("PALS_Factors.csv")
 ```
 
-Renaming the common vairables
+Renaming the common variables
 
 ```{r}
 PALS_Factors <- rename(PALS_Factors, SelfEfficacy_P = SelfEfficacy, MasteryGoals_P = MasteryGoals)
 ```
 
 ```{r}
-write.csv(PALS_Factors, "PALS_Factors_renamed.csv")
+write.csv(PALS_Factors, "PALS_Factors_201021.csv")
 ```
 
 Merging them
@@ -210,14 +211,20 @@ Merging them
 CC_SALES_PALS <- merge(CC_SALES, PALS_Factors, by = "ID")
 ```
 
+
 ```{r}
-write.csv(CC_SALES_PALS, "CC_SALES_PALS.csv")
+CC_SALES_PALS_SS <- merge(CC_SALES_PALS, by = "ID")
+```
+
+
+```{r}
+write.csv(CC_SALES_PALS, "CC_SALES_PALS20211021.csv")
 ```
 
 Cleaning the merged dfs
 
 ```{r}
-CC_SALES_PALS <- dplyr::select(CC_SALES_PALS, -X, -X.1, -Gender.x)
+CC_SALES_PALS <- dplyr::select(CC_SALES_PALS, -X, -X.1)
 ```
 
 renaming SALES values
@@ -229,6 +236,46 @@ CC_SALES_PALS <- CC_SALES_PALS %>%
 
 ```{r}
 write.csv(CC_SALES_PALS, "CC_SALES_PALS_2707.csv")
+```
+
+```{r}
+library(tidyverse)
+```
+
+Merging Stop signal taks means
+
+```{r}
+SS_means <- read.csv("SS_Average_Scores.csv")
+```
+
+```{r}
+SS_means2 <- SS_means %>%
+    filter (Average.of.RTc>0)  %>%
+    rename(ID = Row.Labels)
+```
+
+```{r}
+CC_SALES_PALS_SS <- merge(CC_SALES_PALS,SS_means2, by = "ID")
+```
+
+
+```{r}
+write.csv(CC_SALES_PALS_SS, "CC_SALES_PALS_SS_20211021.csv")
+```
+
+
+Adding FM means (figure matching)
+
+```{r}
+FM_means <- read.csv("FM_means_230821.csv")
+```
+
+```{r}
+CC_SALES_PALS_SS_FM <- merge(CC_SALES_PALS_SS, FM_means, by = "ID")
+```
+
+```{r}
+write.csv(CC_SALES_PALS_SS_FM, "CC_SALES_PALS_SS_FM.csv")
 ```
 
 #Regression for the PALS Scores for postscore
@@ -299,7 +346,7 @@ Residual standard error: 2.562 on 197 degrees of freedom
 Multiple R-squared:  0.05503,	Adjusted R-squared:  0.02145 
 F-statistic: 1.639 on 7 and 197 DF,  p-value: 0.1265
 
-Again, TV is negative
+Again, TV is negative 
 
 ```{r}
 cor(CC_SALES_PALS_Filtered$SALES_Score, CC_SALES_PALS_Filtered$Gain)
@@ -319,9 +366,7 @@ SS_means <- rename(SS_means, ID = subject_id)
 CC_SA_PA_SS <- merge(CC_SALES_PALS, SS_means, by = "ID")
 ```
 
-```{r}
 
-```
 
 #Correlations
 
@@ -400,11 +445,16 @@ cor.plot(Cor_CC_SALES_SS)
 
 For the gain scores, the only corelation that was moderate is the post score (0.36) and the prescore had a -ve correlation of (-.57) which is expected. 
 
+
 #My work on 22/8
 
 In this file, I aim to merge the average scores (re-calculated) and re-test the regressions. 
 
-
+COmparing the regression effect of EF on  gain score and post score 
+```{r}
+EF_CC <- lm(Gain ~  PostScore + SS_ACC + FM_ACC_mean, data = data)
+summary(EF_CC)
+```
 
 
 
