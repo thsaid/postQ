@@ -1,0 +1,112 @@
+---
+Title: "SALES Questions"
+author: "Tamer Said"
+date: "04/08/2020"
+output: html_document
+---
+
+#Intro to SALES survey
+
+Q7-Q14	SE (8 questions)
+Q15-Q22	TV (8 questions)
+Q23-Q32	MG (9 questions)
+Notes: Questions 26 and 31 are repeated
+Questions 24 and 29 are repeated
+There is a missing question: It is important to me that I improve my
+science skills.
+
+```{r}
+
+```
+
+I created the variable postQ to save it as a variable (data frame) or tibble
+```{r}
+postQ <-read.csv("Post Questionnaire.csv")
+```
+
+
+i have to load tidyverse package first
+```{r}
+library(tidyverse)
+
+```
+
+To select the coloumns I am interested in, I want to select the variables that have the SALES questions only (from Q7 to Q32)
+
+```{r}
+SALES <- select(postQ,Q1:Q4, Q7:Q32)
+```
+To delete the row no. 2 inserted by qualitrics by mistake ( the 2 indicate the row number)
+
+```{r}
+SALES <- SALES[-2, ] 
+```
+
+I am going to rename the variables instead of having question names
+
+```{r}
+SALES %>% 
+  rename(ID= Q1, Picture= Q2, Color= Q3, Gender= Q4)
+```
+
+Scoring of the SALES Questions
+
+```{r}
+scoring <- read.csv("scoring.csv")
+```
+
+Arranging data in long format ( I got confused here, and converted the whole dataset rather than SALES, is there a way to undo this?)
+
+```{r}
+postQ_long <- pivot_longer(data = postQ,cols =Q7:Q32,names_to = "Question",values_to = "Response"  )
+```
+
+```{r}
+SALES_long <- pivot_longer(data = SALES,cols =Q7:Q32,names_to = "Question",values_to = "Response"  )
+
+```
+Renaming variables in SALES_long
+
+```{r}
+SALES_long %>% 
+  rename(ID= Q1, Picture= Q2, Color= Q3, Gender= Q4)
+```
+
+Joining the tables together to calculate the scores
+
+```{r}
+SALES_joined <- inner_join (x = SALES_long,y= scoring, by = "Response")
+```
+
+Renaming the columns
+ 
+```{r}
+SALES_joined %>% 
+  rename(ID= Q1, Picture= Q2, Color= Q3, Gender= Q4)
+```
+Finding score of each participant
+ 
+```{r}
+SALES_scores <- SALES_joined %>% 
+             group_by(Q1) %>% 
+             summarise (SS = sum(score))
+```
+I would like to check the structure of my variables
+```{r}
+str(SALES_joined)
+
+```
+
+To check for missing values
+```{r}
+is.na(SALES_joined)
+```
+```{r}
+summary(SALES_joined)
+```
+Renaming the variables in SALES Scores
+
+```{r}
+SALES_scores <- rename(SALES_scores, ID= Q1)
+```
+

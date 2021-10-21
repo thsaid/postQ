@@ -1,0 +1,594 @@
+---
+title: "MANOVA"
+author: "Tamer Said"
+date: "24/06/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Following Andy Field's codes 
+
+```{r}
+
+packages("mvoutlier"); install.packages("mvnormtest"); install.
+packages("pastecs"); install.packages("reshape"); install.
+packages("WRS", repos="http://R-Forge.R-project.org")
+library(car); library(ggplot2); library(MASS); library(mvoutlier);
+library(mvnormtest); library(pastecs); library(reshape); 
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
+library(car)
+library(broom)
+```
+
+#Data reshape: I resphaed the data in excel to mimik Fields' strcuture: New coloumn is inserted for group and will proceed in the MANOVA.rmd file
+
+```{r}
+PrePostCC <- read.csv("PrePostCC_wide-mod.csv")
+```
+
+Changing the group variable to factor with 2 levels
+
+```{r}
+PrePostCC$Group<-factor(PrePostCC$Group, levels = c("Pre", "Post"))
+```
+
+```{r}
+library(pastecs)
+```
+
+Doing a comparative analysis for Q08 between pre and post
+```{r}
+by(PrePostCC$Q08, PrePostCC$Group, stat.desc, basic = FALSE)
+```
+
+```{r}
+describeBy(PrePostCC, group = "Group")
+```
+
+Checking Homogeneity of covariance matrices (code did not work)
+
+```{r}
+cov("Q08":"Q24", use = "complete.obs")
+```
+
+
+```{r}
+by(PrePostCC[, 3:18], PrePostCC$Group, cov)
+```
+
+#Data visualization (all the below are examples of me trying to visualize my data, but nothing came as I wanted!
+
+I am not sure why this code does not result in a box plot, it only views dashes instead!
+```{r}
+library(ggpubr)
+ggboxplot(
+  PrePost_mean, x = "Question", y = c("PreValue", "Post.Value"), 
+  merge = TRUE, palette = "jco"
+  )
+```
+
+```{r}
+ggboxplot(
+  PrePost_mean, x = "Question", y = c("PreValue", "Post.Value"), 
+  merge = TRUE, palette = "jco"
+```
+
+
+```{r}
+ggplot(data = PrePostCC2, aes(x = Question,  y= value) + 
+         geom_freqpoly (aes(colour = Group), binwidth = 500))
+```
+
+```{r}
+ggplot(PrePostCC2, 
+       aes(x = Question, y = value),
+           fill = Group + stat_summary() + 
+  geom_bar(position = "stack"))
+
+```
+
+
+```{r}
+PrePostCC2 %>%
+ggplot(aes(x = Question, y = value, fill=Group, fun.args= 50))
+          stat_summary(fun.data = mean_se, geom = "bar") 
++ geom_boxplot()
+
+```
+
+```{r}
+boxplot(PrePostCC2$Question ~ PrePostCC2$value)
+```
+
+Not sure, why nothing comes out of this! 
+```{r}
+ggplot(PrePostCC2, 
+       aes(x = Question, y = after_stat(value, fill = Group)) 
++ stat_summary(fun.data = mean_se()) 
++  geom_bar(position = "fill")
+```
+
+```{r}
+ggplot(PrePostCC2, aes(Question, value)) + 
+  geom_point() + 
+  geom_point(stat = "summary", fun = "mean", colour = "red", size = 4)
+
+```
+
+```{r}
+ggplot(data = PrePostCC2, mapping = aes(x = Question)) +
+
+geom_freqpoly()
+```
+
+
+```{r}
+ggplot(data = PrePostCC2, mapping = aes(x = Question, y = value)) +
+  geom_boxplot()
+```
+
+It seems that box plots are not the best way to present my data
+
+```{r}
+ggplot(data = PrePostCC2) +
+  geom_boxplot(mapping = aes(x = Question, y = value))
+```
+
+```{r}
+ggplot(data = PrePost_mean) +
+  geom_boxplot(mapping = aes(x = Question, y = PreValue))
+```
+
+
+To visualise the covariation between categorical variables, you’ll need to count the number of observations for each combination. One way to do that is to rely on the built-in geom_count():
+
+Not sure how to differentiate them by group
+```{r}
+ggplot(data = PrePostCC2) +
+  geom_count(mapping = aes(x = Question, y = value))
+```
+
+
+```{r}
+PrePostCC2 %>%
+ ggplot( aes(x=Question, fill=Group)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2", "#404080"))
+```
+ Search on how to set count in ggplots 
+ 
+```{r}
+ ggplot(PrePostCC2, aes(x= Question, y= value, fill= Group)) +
+    geom_boxplot(alpha=0.7) +
+    stat_summary(fun.y=mean, geom="point", shape=20, size=8, color="blue", fill="red") +
+    theme(legend.position="none") +
+    scale_fill_brewer(palette="Set1")
+```
+ 
+
+
+```{r}
+boxplot(PrePostCC2, x= PrePostCC2$Question, y= PrePostCC2$value)
+```
+
+
+Plotting for outliers (based on the box plot above, Q08 & Q22, showed to be outlires, I can specifically look for outliers )
+
+
+```{r}
+PrePostCC %>%
+  group_by(Group) %>%
+  identify_outliers(Q08) # 120 rows were identified
+```
+
+```{r}
+PrePostCC %>%
+  group_by(Group) %>%
+  identify_outliers(Q22)
+```
+77 inputs showed to be outliers
+
+```{r}
+PrepostMatrix <- select(PrePost_Complete, - ID, -Group)
+```
+
+#Mutlivariate ouliers: 
+The Mahalanobis distance is generally used to detect multivariate outliers. The distance tells us how far an observation is from the center of the cloud, taking into account the shape (covariance) of the cloud as well.
+
+```{r}
+# Compute distance by groups and filter outliers
+# Use -id to omit the id column in the computation
+PrePostCC %>%
+ group_by(Group) %>%
+ mahalanobis_distance %>%
+ filter(is.outlier == TRUE) %>%
+  as.data.frame()
+```
+
+Nothing was identified using this test..
+
+
+#Non-parametric analysis
+
+```{r}
+library(npmv)
+```
+
+
+```{r non-partest}
+nonpartest (Q08 | Q09 | Q10 | Q11 | Q12 | Q13 | Q14 | Q15 | Q16 | Q17  | Q18 | Q19 | Q20 | Q21 | Q22 | Q24 ~ Group, data =PrePostCC, permreps = 1000)
+
+```
+
+There were some errors in the plots. Will try to run the code again with the complete data set and see if there any changes in the data.
+
+```{r}
+nonpartest (Q08 | Q09 | Q10 | Q11 | Q12 | Q13 | Q14 | Q15 | Q16 | Q17  | Q18 | Q19 | Q20 | Q21 | Q22 | Q24 ~ Group, data =PrePost_Complete, plots = TRUE, permreps = 1000)
+```
+
+
+#Chi-square test
+
+```{r}
+Chisqare_output=chisq.test(PrepostMatrix)
+Chisqare_output
+```
+
+```{r}
+as.integer(PrePostCC2$Question)
+```
+
+
+Mann_whitney
+```{r}
+
+wilcox.test(PrePostCC2$value)
+```
+Not sure of this is a right command or not! and whther the output is accurate or not. 
+
+```{r}
+PrePostCC %>%
+ group_by(Group) %>% 
+ wilcox.test(Q10)
+```
+
+
+
+#Check linearity assumption
+
+The pairwise relationship between the outcome variables should be linear for each group. This can be checked visually by creating a scatter plot matrix using the R function
+
+```{r}
+library(GGally)
+results <- PrePostCC %>%
+  select(Q08:Q24) %>%
+  group_by("Group") %>%
+  doo(~ggpairs(.) + theme_bw(), result = "plots")
+results$plots
+```
+
+```{r}
+results2 <- PrePostCC_Wide %>%
+  doo(~ggpairs(.) + theme_bw(), result = "plots")
+results$plots
+```
+
+
+#Check univariate normality assumption
+
+The normality assumption can be checked by computing Shapiro-Wilk test for each outcome variable at each level of the grouping variable. If the data is normally distributed, the p-value should be greater than 0.05.
+
+```{r}
+PrePostCC %>%
+  group_by(Group) %>%
+  shapiro_test(Q08, Q09, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22, Q24) %>%
+  arrange(variable)
+```
+
+All the data shows that they are NOT normally distributed. This is expected since the data is binomial. 
+
+The same can be done using QQ plots (in this case they are meaningless since the data is binomial)
+
+#Check univariate normality assumption: Shapiro test
+
+
+
+
+#Identify multicollinearity
+
+Cor_mat command allows for a correlation matrix for more than 2 variables
+```{r}
+  PrePostCor <- cor_mat(PrePostCC_Wide, method = "spearman")
+```
+
+```{r}
+write.csv(PrePostCor, "PrePostCC_Corr.csv")
+```
+
+#Check the homogeneity of covariances assumption:
+Using the Box’s M-test
+
+Note from Field : Box’s test is notoriously susceptible
+to deviations from multivariate normality and so can be non-significant not because the matrices are similar, but because the assumption of multivariate normality is not tenable.
+
+Removing IDs from the matrix
+```{r}
+PrePostCC2 <- select(PrePostCC, -ID)
+```
+
+
+```{r}
+box_m(PrePostCC2, group = "Group")
+```
+
+#Transforming data to long format
+Gathering questions under key variable: Question and value
+
+```{r}
+PrePostCC2 <- PrePostCC %>% 
+  gather(key = "Question", value = "value", Q08, Q09, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22, Q24)
+```
+
+
+
+```{r}
+LevenePrePost <- PrePostCC %>% 
+  gather(key = "Question", value = "value", Q08, Q09, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22, Q24) %>%
+  group_by(Question) %>%
+  levene_test(value ~ Group)
+```
+
+
+The Levene’s test is significant (p < 0.05), for most of the questions, except for : Q09, Q10, Q11, Q12, Q13, Q17, Q24.
+
+```{r}
+write.csv(LevenePrePost, "PrePost_levene.csv")
+```
+
+
+#Violin Plots
+```{r}
+PrePostCC %>% 
+ggplot( aes(x=Question, y=value, fill=Group)) +
+    geom_violin()
+```
+
+```{r}
+write.csv()
+```
+
+
+#MANOVA model for Questions
+
+
+```{r}
+#newModel<-manova(outcome ~ predictor(s), data = dataFrame, na.action = na.exclude()
+
+PrePostModel<-manova(value ~ Group + Question, data = PrePostCC2, na.action = na.exclude)
+```
+
+
+#Trying out MANOVAs for the Questions mean scores (Michelle suggested)
+
+I'll name the predictor dependent variables first since something does not work well with MANOVA
+
+```{r}
+Values <- cbind(PrePost_mean$PreValue, PrePost_mean$Post.Value)
+```
+
+```{r}
+manova1 <-manova (Values ~ Question, data = PrePost_mean)
+summary(manova1)
+```
+
+```{r}
+PrePostmeanModel <-manova (cbind(PreValue, Post.Value) ~ as.factor( Question), data = PrePost_mean, na.action = na.exclude)
+PrePostmeanModel
+```
+
+```{r}
+Values = as.matrix(Values)
+```
+
+
+#Mutlivariate ouliers: 
+The Mahalanobis distance is generally used to detect multivariate outliers. The distance tells us how far an observation is from the center of the cloud, taking into account the shape (covariance) of the cloud as well.
+
+
+```{r}
+# Compute distance by groups and filter outliers
+# Use -id to omit the id column in the computation
+PrePostCC %>%
+ group_by(Group) %>%
+ mahalanobis_distance %>%
+ filter(is.outlier == TRUE) %>%
+  as.data.frame()
+
+```
+
+Nothing was identified using this test..
+
+
+#MANOVA model
+
+newModel<-manova(outcome ~ predictor(s), data = dataFrame, na.action = na.exclude()
+
+```{r}
+PrePostCC %>%
+Question <- cbind("Q08":"Q24")
+```
+
+MANOVA did not work since the values of the questions are not equal, this could be due to the missing values. Will try deleting the missing values and trying out again
+
+```{r}
+PrePost_Complete <- PrePostCC[complete.cases(PrePostCC), ]
+```
+
+436 cases remained from a total of 682 (for both groups)
+
+```{r}
+Manova_model<-manova(cbind(Q08,Q09, Q10, Q11, Q12, Q13, Q14, Q15, Q16,Q17, Q18, Q19, Q20, Q21, Q22, Q23, Q24) ~ Group, data = PrePost_Complete, na.action = na.exclude)
+```
+
+
+```{r}
+PrePost_mean <- read.csv("PrePostCC_mean.csv")
+```
+
+
+
+```{r}
+FIT <- lm(PrePostCC2$Group~PrePostCC2$value)
+FIT
+abline(reg = FIT)
+```
+
+#Trying out Kruscal-Wallace test
+
+A somewhat simpler test is the Kruskal-Wallace test which is implemented in R in the kruskal.test() function. The x parameter is a continuous (interval/ratio) variable. The g parameter is the categorical variable representing different groups to which the continuous values belong.The null hypothesis with a Kruskal-Wallace test is that all the different groups represented by the samples are very similar.
+
+```{r}
+PrePostCC2 %>% kruskal_test(value ~ Group)
+```
+The p value of 1.08e-20, appears to be very minimal, so there is a very low chance that the differences between the means is random. NOTE: This test is run on the long data format, which amplify the sample size to 10912 participants. I am not sue if this affects the test-- check with Michelle. 
+
+#Paired-T test
+
+```{r}
+t.test(PrePostInd$PostScore, PrePostInd$PreScore,, mu = 0, alternative = "two.sided", paired = T, conf.level = 0.99)
+```
+The P-value shows that there is a significant difference between the groups (even when not adjuting for the outliers who scored more than 17)
+
+#8/7/2021: After Michelle's supervision, I learned that I need to define NAs when importing the data. I also need to change the dep. variables & indepenedent variables as factors 
+
+<<<<<<< HEAD
+Renaming the files, before saving
+
+```{r}
+PrepostCC_long <- PrePostCC2 %>%
+  rename(Time = Group, score = value)
+```
+
+I will save the file first, then reload it 
+
+
+```{r}
+write.csv(PrepostCC_long, "PrePostCC_long.csv")
+```
+
+Importing the data again, while identifying NAs
+```{r}
+PrepostCC_long <- read.csv("PrePostCC_long.csv",header = T, na.strings=c(""," ","NA"))
+```
+
+```{r}
+PrepostCC_long <- select(PrepostCC_long, -X)
+```
+
+Mutating coloumns as.factors
+```{r}
+PrepostCC_long <-
+PrepostCC_long %>%
+  mutate(Time = as.factor(Time))  %>%
+  mutate(Question = as.factor(Question))
+```
+
+Attempting MANOVA trying MANOVA.RM package (https://cran.r-project.org/web/packages/MANOVA.RM/vignettes/Introduction_to_MANOVA.RM.html)
+
+```{r}
+library(MANOVA.RM)
+```
+
+THis command requries no missing values, so I wll create a new version with no missing values
+```{r}
+PrePostCC_longComp <- drop_na(PrepostCC_long)
+```
+Around 600 values were dropped
+
+```{r}
+PrePostMANOVA <- MANOVA(Question * Time ~ score, 
+                     data = PrePostCC_longComp, subject = "ID", resampling = "paramBS", iter = 1000,  alpha = 0.01, seed = 987)
+```
+
+Error: Error in A %*% x : non-conformable arguments
+
+Will try the old package again, finally it worked. I had to re-arrange the order of my variables
+
+```{r}
+Manovatrial <-manova(score ~ Time + Question, , data = PrepostCC_long, na.action = na.exclude)
+summary(Manovatrial)
+```
+
+It seems that this type of MANOVA works on wide data, there are spaces for multiple variables 
+
+I will work on saving the df and loading it again to ensure nothing is wrong with data framews
+
+```{r}
+PrePostCC <- PrePostCC %>%
+  mutate(Group = as.factor(Group))
+```
+
+```{r}
+Manova2 <-manova(cbind(Q08, Q09, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22, Q24) ~ Group, data = PrePostCC, na.action = na.exclude)
+summary(Manova2)
+```
+The F values is 5.314e-06, which shows that the difference is significant.
+
+Running the 4 tests
+```{r}
+summary(Manova2, intercept = TRUE)
+summary(Manova2, intercept = TRUE, test = "Wilks")
+summary(Manova2, intercept = TRUE, test = "Hotelling")
+summary(Manova2, intercept = TRUE, test = "Roy")
+```
+
+```{r}
+write.csv(PrePostCC, "PrePostCC_20210807.csv")
+```
+
+Testing type II sums of squares
+
+```{r}
+Anova(Manova2, type = "II")
+```
+DId not work
+
+Tryind Discriminate analysis (according to Field)
+
+```{r}
+library(MASS)
+```
+lda function: Linear Discriminant Analysis
+
+```{r}
+PrePostDFA<-lda(Group ~ Q08 + Q09 + Q10 + Q11 + Q12 + Q13 + Q14 + Q15 + Q16 + Q17 + Q18 + Q19 + Q20 + Q21 + Q22 + Q24, data = PrePostCC)
+PrePostDFA
+```
+
+Understanding lda output:
+
+probabilities are the sample size per group/ total sample size
+
+-Linear coef. are exactly the same as beta in regressions. They explain the relative contribution of each Question (variable), to the variates (latent variable). 
+
+```{r}
+predict(PrePostDFA)
+```
+
+```{r}
+plot(PrePostDFA)
+```
+
+```{r}
+hist(PrePost_mean
+```
+=======
+>>>>>>> 94f00635359239141998667830053bb6df1921df
+

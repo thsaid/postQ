@@ -1,0 +1,132 @@
+---
+title: "EFA_PostCC"
+author: "Tamer Said"
+date: "17/07/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(MVN)
+library(psych)
+```
+
+
+Checking normality of the Post CC scores
+
+```{r}
+mvn(PostCC_polyMatrix)
+```
+
+It appeared that the data is NOT normally distributed. THus, when doing EFA I need an estimator that fitw with non-nomarl data 
+
+#Mutlivariate ouliers: 
+The Mahalanobis distance is generally used to detect multivariate outliers. The distance tells us how far an observation is from the center of the cloud, taking into account the shape (covariance) of the cloud as well.
+
+
+Nothing was identified using this test..
+
+
+```{r}
+ mahalanobis_distance(PostCC_polyMatrix) %>%
+ filter(is.outlier == TRUE)
+```
+
+Nothing was filtered out.. meaning that there are no outliers. 
+
+#KMO
+Kaiser-Meyer-Olkin (KMO) measure of sampling
+adequacy for the R-matrix can be used to examine
+whether the variables are measuring a common factor
+as evidenced by relatively compact patterns of
+correlation. The KMO provides an index for comparing
+the magnitude of observed correlation coefficients to
+the magnitude of partial correlation coefficients with
+acceptable values ranging from 0.5 to 1
+```{r}
+KMO(PostCC_polyMatrix)
+```
+Again, it appears that some questions such as Q9, Q12, Q17 show lower values than the rest of the quesions. This is going to be further examined using EFA
+
+#EFA using efa ultiltieis
+```{r}
+install.packages("EFAutilities") 
+library(EFAutilities)
+```
+
+```{r}
+efa(PostCC_polyMatrix, factors = 4,n.obs = 413, dist = 'continuous')
+```
+
+Dropping nas
+
+```{r}
+PostCC_Complete <-drop_na(PostCC_polyMatrix)
+```
+
+The code did not work because of missing data
+
+only 306 observation of 416 is left!! check with Michelle about multiple imputations! 
+
+```{r}
+PostCC_EFA1 <- efa(PostCC_Complete, factors = 4,n.obs = 413, dist = 'continuous')
+```
+
+```{r}
+summary(PostCC_EFA1)
+```
+#Using Fa command for the whole data set
+
+
+```{r}
+PreCC_EFA_ml = fa(PreCCmatrix, nfactor=2, n.obs= 413,missing = TRUE, fm="ml", rotate = "none")
+PreCC_EFA_ml
+fa.diagram(PreCC_EFA_ml)
+```
+
+Using ols for 4 facrtors
+
+
+```{r}
+PostCC_EFA_ols = fa(PostCC_polyMatrix, nfactor=4, n.obs= 413, fm="ols", rotate = "none")
+```
+
+```{r}
+fa.diagram(PostCC_EFA_ols)
+```
+
+```{r}
+PostCC_EFA_uls = fa(PostCC_polyMatrix, nfactor=4, n.obs= 413, fm="uls", rotate = "none")
+fa.diagram(PostCC_EFA_uls)
+```
+No difference was detected between OLs and ULS methods. Both are robust for violoations in normality. 
+
+2 Factor model
+```{r}
+PostCC_EFA_uls2 = fa(PostCC_polyMatrix, nfactor=2, n.obs= 413, fm="uls", rotate = "none")
+fa.diagram(PostCC_EFA_uls2)
+```
+#EFA for pre cc to compare the difference between both
+
+
+With rotations 
+
+```{r}
+PreCC_EFA_ols2 = fa(PreCCmatrix, nfactor=2, n.obs= 413, fm="ols", rotate = "none")
+fa.diagram(PreCC_EFA_ols2)
+```
+
+without rotations
+
+
+```{r}
+PreCC_EFA_ols2 = fa(PreCCmatrix, nfactor=2, n.obs= 413, fm="ols")
+fa.diagram(PreCC_EFA_ols2)
+```
+
+Note the difference between ols and uls.. Q22 is invluded in F1 in ols, but not while using ULS. Need to read more about them and know when to use which one. 
+
+

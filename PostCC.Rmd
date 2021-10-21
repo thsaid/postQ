@@ -1,0 +1,314 @@
+---
+title: "Post CC"
+author: "Tamer Said"
+date: "04/08/2020"
+output: html_document
+---
+
+#Intro to SALES survey
+
+Q7-Q14	SE (8 questions)
+Q15-Q22	TV (8 questions)
+Q23-Q32	MG (10 questions)
+Notes: Questions 26 and 31 are repeated
+Questions 24 and 29 are repeated
+
+
+```{r}
+
+```
+
+
+To load the library
+```{r}
+library(tidyverse)
+
+```
+
+```{r}
+postQ <- read.csv("Post Questionnaire.csv")
+```
+
+
+To select the variables for the postCC (SC) represents the score)
+```{r}
+PostCC <- select(postQ, Q1:Q4,SC0)
+```
+
+To delete the 2nd row 
+```{r}
+PostCC <- PostCC[-2,]
+```
+
+To rename the variables, you do not have to use the pipes, but in this case you will have to indicate the name of the dataset
+
+```{r}
+PostCC%>% 
+  rename(ID= Q1, Picture= Q2, Color= Q3, Gender= Q4, Score=SC0)
+```
+The command below will remove the missing values implicitly 
+```{r}
+PostCC <- filter(PostCC, Q1>1)
+```
+To arrange the data according to ID 
+```{r}
+arrange(PostCC, Q1)
+```
+Let's try to arrange the result accorind to score
+
+```{r}
+arrange(PostCC, SC0)
+```
+
+From this arrangement, it appeared that some students have not filled the questionnaire, so I need to arrange the scores accordingly, and remove those without scores:I created the variable PostCC-Clean
+
+```{r}
+PostCC_Clean<- filter(PostCC, SC0 >=0)
+PostCC_Clean
+```
+This code retrieved all the values that are greated than 1 and stored them in the variable PostCC_Clean. Let's check of there are still any missing values in SC0.
+
+```{r}
+filter(PostCC_Clean, !is.na(SC0))
+
+```
+
+This command resulted in the deletion of 6 observation, in which the score was missing. 
+
+Renaming the variables
+
+```{r}
+PostCC_Clean <- rename(PostCC, ID=Q1, Picture= Q2, Color= Q3, PostCCScore= SC0)
+
+```
+
+lets print
+```{r}
+head(PostCC_Clean)
+```
+
+Again the cleaned variables were not saved, since I did not save the filter command in a new variable. I have to create a new one
+
+```{r}
+PostCC_Clean <- filter(PostCC_Clean, !is.na(PostCCScore))
+PostCC_Clean
+```
+to check if there are still any missing values, I will arrange the values by score
+
+```{r}
+arrange(PostCC_Clean, PostCCScore)
+```
+
+There are still some missing values, I am not sure why they were not removed. 
+
+```{r}
+PostCC_Clean <- filter(PostCC, !is.na(SC0))
+
+```
+
+Still not working, wil try anohter one
+
+```{r}
+PostCC_Clean<- filter(PostCC, SC0 >=0)
+```
+
+This worked!! and 6 variables were removed.. let's check
+
+Now, I need to arrange the rows according to IDs..
+
+```{r}
+PostCC_Clean <- arrange(PostCC, Q1)
+```
+
+When I ran this command, the missing values returned again. 
+
+I am not sure, if I need to create a new variable to arrange the variables 
+
+I will try to use the pipes to see where the problem is
+
+```{r}
+PostCC_Clean <- PostCC  %>%
+  filter( SC0 >=0) %>%
+  arrange(Q1)
+
+```
+Now it worked, the missing data were removed, then the data were arranged according to ID, I will now rename the variables.
+
+```{r}
+PostCC_Clean <- PostCC  %>%
+  filter( SC0 >=0) %>%
+  arrange(Q1 )%>%
+  rename(ID= Q1, Picture =Q2, Color = Q3,Gender =Q4, PostCCScore = SC0)
+
+```
+
+```{r}
+PostCC_Clean
+```
+Before merging the data, I need to make sure that there is a common coloumn that has the same name: ID
+
+```{r}
+SALES_scores <- rename(SALES_scores,ID= Q1)
+```
+
+Merge Data
+
+In this section, I will merge the data from PostCC and SALES to see if there is any coorelation between PostCCScore and SALES score.
+
+I will use the merge command to do so, based on ID. 
+
+```{r}
+CC_SALES <- merge(PostCC_Clean,SALES_scores,by = "ID")
+```
+
+As we can see i have got 392 observations, 6 variables 
+
+
+Is it possible to merge by more than one critieria? I am going to try that
+
+```{r}
+CC_SALES <- merge(PostCC_Clean,SALES_scores,by = "ID", "Picture")
+```
+
+This did not work, since the SALES-Scores does not have picture, it's only ID.
+
+```{r}
+CC_SALES <- merge(PostCC_Clean,SALES_scores,by = "ID")
+```
+
+I want to try to filter all the NAs from postCC score inorder to convert it to a numeric variable
+
+
+```{r}
+filter(CC_SALES, !is.na(PostCCScore))
+```
+
+```{r}
+CC_SALES <- filter(CC_SALES, !is.na(PostCCScore))
+```
+
+Converting PostCCSCore to numeric in order to do the correlations
+
+```{r}
+as.numeric(CC_SALES$PostCCScore)
+```
+New clean variable
+```{r}
+CC_SALESClean <- filter(CC_SALES, !is.na(PostCCScore))
+
+```
+
+There are still some variables that I do not want.. Will use another command to filter those unwanted ones. SOme ID numbers are not logical (ex. 8...), in this case, I need to select those ones since the filter command outputs a logical vector (True and false)
+
+```{r}
+CC_SALESClean <-CC_SALESClean[-393,]
+```
+
+```{r}
+CC_SALESClean <-CC_SALESClean[-392,]
+```
+
+```{r}
+CC_SALESClean <-CC_SALESClean[-391,]
+```
+
+```{r}
+str(CC_SALESClean)
+```
+
+still , the postCCscore is character.. will try to convert it as integer.
+
+Here I will refer to Andy field to see how I can change the variable from character to integer..
+Loading packages from Andy field
+
+```{r}
+install.packages("Hmisc"); install.packages("ggm");
+install.packages("ggplot2"); install.packages("polycor")
+```
+
+Converting PostCCScore to integer
+
+```{r}
+CC_SALES %>%
+PostCCScore <- as.numeric(PostCCScore)
+```
+
+I kept getting an error message using the code above, so I had to create a new variable PoCC that is a numeric vector
+
+```{r}
+PoCC <- as.numeric(CC_SALES$PostCCScore)
+```
+
+Correlation test
+
+```{r}
+cor.test( CC_SALES$SS,PoCC)
+```
+
+
+PLOTS
+
+I will start to do some plotting to see if there are any relationship between the scores
+
+before doing a plot, we need to check the summary of the data using summary command
+
+```{r}
+summary(CC_SALES$SS)
+```
+
+Let's try a box plot to see the distribution of the Sales score
+
+```{r}
+boxplot(CC_SALES$SS, col = "blue")
+```
+Let's try the same for PostCC score
+
+```{r}
+boxplot(PoCC, col = "blue")
+```
+Histogram
+```{r}
+hist(CC_SALES$SS)
+```
+After seeing the plots, it appears that there are some outliers (over 200), since the maximum score is 125 (25*5), maybe some students have done the survey twice, which could skew the data.. I will create a new varaible and include only the ones less than or equal 125
+
+```{r}
+SSNew <- filter(CC_SALES, SS <= 125)
+```
+
+This command rendered 353 observations instead of 375..
+
+Will try a scatter plot now and see if the relation changes after removing the outliers
+
+```{r}
+hist(SSNew$SS)
+```
+After removing the outliers, we can see that the Sales score is normally distrubuted, but is left skewed.
+
+Let's see the scatter plot between the new SS and Post CC
+
+
+```{r}
+mygraph <- ggplot(CC_SALESClean, aes(SS, PostCCScore))
+```
+Now, I will specify the figure to be shown , e.x.point
+```{r}
+ mygraph + geom_point()
+```
+
+We can change the size of the point here
+
+```{r}
+mygraph + geom_point(size = .5)
+```
+This graphs allows for a boxplot that shows the difference bet gender in the sales score
+
+```{r}
+ boxplot(SS ~ Gender, CC_SALES)
+```
+
+
+```{r}
+mygraph + geom_point(aes(colour = Gender))
+```
+

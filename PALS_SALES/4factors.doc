@@ -1,0 +1,41 @@
+Factor Analysis using method =  minres
+Call: fa(r = PS_factors_cor, nfactors = 4, n.obs = 359)
+Standardized loadings (pattern matrix) based upon correlation matrix
+
+                       MR1  MR2  MR3  MR4
+SS loadings           2.54 1.73 1.63 0.20
+Proportion Var        0.36 0.25 0.23 0.03
+Cumulative Var        0.36 0.61 0.84 0.87
+Proportion Explained  0.42 0.28 0.27 0.03
+Cumulative Proportion 0.42 0.70 0.97 1.00
+
+ With factor correlations of 
+     MR1  MR2   MR3   MR4
+MR1 1.00 0.13  0.55  0.01
+MR2 0.13 1.00  0.12  0.00
+MR3 0.55 0.12  1.00 -0.10
+MR4 0.01 0.00 -0.10  1.00
+
+Mean item complexity =  1.1
+Test of the hypothesis that 4 factors are sufficient.
+
+The degrees of freedom for the null model are  21  and the objective function was  5.86 with Chi Square of  2078.66
+The degrees of freedom for the model are -1  and the objective function was  0 
+
+The root mean square of the residuals (RMSR) is  0 
+The df corrected root mean square of the residuals is  NA 
+
+The harmonic number of observations is  359 with the empirical chi square  0.01  with prob <  NA 
+The total number of observations was  359  with Likelihood Chi Square =  0.3  with prob <  NA 
+
+Tucker Lewis Index of factoring reliability =  1.013
+Fit based upon off diagonal values = 1
+Measures of factor score adequacy             
+                                                   MR1  MR2  MR3
+Correlation of (regression) scores with factors   1.00 0.96 1.00
+Multiple R square of scores with factors          1.00 0.93 0.99
+Minimum correlation of possible factor scores     0.99 0.85 0.99
+                                                   MR4
+Correlation of (regression) scores with factors   0.74
+Multiple R square of scores with factors          0.55
+Minimum correlation of possible factor scores     0.11
