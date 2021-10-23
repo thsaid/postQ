@@ -275,8 +275,22 @@ CC_SALES_PALS_SS_FM <- merge(CC_SALES_PALS_SS, FM_means, by = "ID")
 ```
 
 ```{r}
-write.csv(CC_SALES_PALS_SS_FM, "CC_SALES_PALS_SS_FM.csv")
+write.csv(CC_SALES_PALS_SS_FM, "CC_SALES_PALS_SS_FM_20211021.csv")
 ```
+
+```{r}
+CB_means <- read.csv("CB_means_15092021.csv")
+```
+
+```{r}
+CB_means<- rename(CB_means, ID = subject_id)
+```
+
+
+```{r}
+FullData2310 <- merge(CC_SALES_PALS_SS_FM, CB_means, by = "ID")
+```
+
 
 #Regression for the PALS Scores for postscore
 
@@ -372,7 +386,7 @@ CC_SA_PA_SS <- merge(CC_SALES_PALS, SS_means, by = "ID")
 
 ```{r}
 
-Cormat <- cor(CC_SA_PA_SS[sapply(CC_SA_PA_SS, is.numeric)], use='pairwise')
+Cormat <- cor(CC_SALES_PALS_SS_FM[sapply(CC_SALES_PALS_SS_FM, is.numeric)], use='pairwise')
 ```
 
 ```{r}
