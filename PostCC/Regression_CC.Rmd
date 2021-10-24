@@ -291,6 +291,23 @@ CB_means<- rename(CB_means, ID = subject_id)
 FullData2310 <- merge(CC_SALES_PALS_SS_FM, CB_means, by = "ID")
 ```
 
+```{r}
+Demog <- read.csv("Demog08092021.csv")
+```
+
+```{r}
+FullData2310_Demo <- merge(FullData2310, Demog, by = "ID")
+```
+
+
+```{r}
+FullData2310_Z <- merge(FullData_Z, FullData2310, by = "ID")
+```
+
+```{r}
+write.csv(FullData2310_Z, "FullData2310.csv")
+```
+
 
 #Regression for the PALS Scores for postscore
 
