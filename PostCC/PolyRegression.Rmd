@@ -10,3 +10,60 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
+```{r}
+library(tidyverse)
+library(caret)
+library(modelr)
+```
+
+#Postscore as outcome variable
+```{r}
+modelpostscore <- lm(PostScore ~ Age, data = FullData)
+```
+Graphing age and postscore
+```{r}
+ggplot(FullData, aes(Age, PostScore) ) +
+  geom_point() +
+  stat_smooth(method = lm, formula = y ~ x)
+```
+Residuals 
+
+```{r}
+postscore.stdres = rstandard(modelpostscore )
+```
+
+```{r}
+plot(FullData, postscore.stdres, 
++     ylab="Standardized Residuals", 
++     xlab="Age", 
++     main="Old Faithful Eruptions") 
+```
+
+Saving residuals for post-score resid
+
+```{r}
+DataRes<-FullData %>% 
+    group_by(ID) %>% 
+    mutate(PostScoreRes = residuals(lm(PostScore ~ Age)))
+```
+The scores are zeros.. revisit this
+
+```{r}
+DataRes<-FullData %>% 
+    group_by(ID) %>% 
+    mutate(FMRes = residuals(lm(FM_EFF_Z ~ Age.cubed)))
+```
+
+```{r}
+DataRes<-FullData %>% 
+    group_by(ID) %>% 
+    mutate(FMRes = residuals(lm(FM_EFF_Z ~ Age_squared)))
+```
+
+#Figure_matching (polynomial regression to the third degree) Note:this is more of multiple  regression than hierrchal..all the variables placed at once
+
+```{r}
+FM_Age<- lm(FM_EFF_Z ~ poly(Age, 3, raw = TRUE), data = FullData)
+```
+
+
