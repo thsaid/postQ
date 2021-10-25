@@ -162,4 +162,31 @@ DataRes3 <- cbind(DataRes3,MG_P_stdres)
 ```
 
 
+#SE_P on Age
+
+```{r}
+SE_P_Age <-lm(SE_P ~ Age, data = FullData)
+SE_P_stdres <- rstandard(SE_P_Age)
+DataRes3 <- cbind(DataRes3,SE_P_stdres)
+```
+
+#PAV
+```{r}
+PAV_Age <-lm(PAV ~ Age, data = FullData)
+PAV_stdres <- rstandard(PAV_Age)
+DataRes3 <- cbind(DataRes3,PAV_stdres)
+```
+
+#PAp
+
+```{r}
+PAp_Age <-lm(PAp ~ Age, data = FullData)
+PAp_stdres <- rstandard(PAp_Age)
+DataRes3 <- cbind(DataRes3,PAp_stdres)
+```
+
+
+```{r}
+write.csv(DataRes3, "FullDataRes_2510.csv")
+```
 
