@@ -17,9 +17,22 @@ library(modelr)
 ```
 
 #Postscore as outcome variable
+The relation is linear 
+
 ```{r}
-modelpostscore <- lm(PostScore ~ Age, data = FullData)
+PostScore_Age <- lm(PostScore ~ Age, data = FullData)
+PostScore_stdres <- rstandard(PostScore_Age)
+DataRes3 <- cbind(DataRes3,PostScore_stdres)
 ```
+
+```{r}
+PreScore_Age <-lm(PreScore ~ Age, data = FullData)
+PostScore_stdres <- rstandard(PostScore_Age)
+DataRes3 <- cbind(DataRes3,PostScore_stdres)
+```
+
+
+
 Graphing age and postscore
 ```{r}
 ggplot(FullData, aes(Age, PostScore) ) +
@@ -48,22 +61,105 @@ DataRes<-FullData %>%
 ```
 The scores are zeros.. revisit this
 
-```{r}
-DataRes<-FullData %>% 
-    group_by(ID) %>% 
-    mutate(FMRes = residuals(lm(FM_EFF_Z ~ Age.cubed)))
-```
-
-```{r}
-DataRes<-FullData %>% 
-    group_by(ID) %>% 
-    mutate(FMRes = residuals(lm(FM_EFF_Z ~ Age_squared)))
-```
 
 #Figure_matching (polynomial regression to the third degree) Note:this is more of multiple  regression than hierrchal..all the variables placed at once
 
 ```{r}
 FM_Age<- lm(FM_EFF_Z ~ poly(Age, 3, raw = TRUE), data = FullData)
 ```
+
+#Trying out the modelr package
+
+```{r}
+DataRes <- add_residuals(FullData, FM_Age, var= "FMresid")
+```
+
+comparing the addresiduals to the regular methods to see if they are standardized or not 
+
+```{r}
+FM_stdres <- rstandard(FM_Age)
+```
+
+```{r}
+Datares2 <- cbind(DataRes,FM_stdres)
+```
+
+The testing showed very minor differences across the residuals 
+
+#Trying out the cubic age as predictor. 
+I am using this command to compare it with the poly command above
+```{r}
+FM_Age3<- lm(FM_EFF_Z ~ Age.cubed, data = FullData)
+```
+
+```{r}
+DataRes3 <- add_residuals(DataRes3, FM_Age, var= "CBresid")
+```
+
+It seems that the modelR package adds the residuals in the unstandardised way 
+#CB on Age
+Polynomial regression indicated significant relation with age squared
+
+```{r}
+CB_Age <- lm(CB_EFF_Z ~ Age_squared, data = FullData)
+```
+
+```{r}
+CB_stdres <- rstandard(CB_Age)
+DataRes3 <- cbind(DataRes3,CB_stdres)
+```
+
+#SS on Age
+Polynomial regression indicated significant relation with age 
+
+```{r}
+SS_Age <- lm(SS_EFF_Z ~ Age, data = FullData)
+```
+
+```{r}
+SS_stdres <- rstandard(SS_Age)
+DataRes3 <- cbind(DataRes3,SS_stdres)
+```
+
+-----------------
+
+Motivation residuals 
+
+#MG_S on Age
+Check with Michelle.. Age was not significant in any of its forms with MG
+
+```{r}
+MG_S_Age <-lm(MG_S ~ Age, data = FullData)
+MG_S_stdres <- rstandard(MG_S_Age)
+DataRes3 <- cbind(DataRes3,MG_S_stdres)
+```
+
+#SE_S on Age
+Check with Michelle.. Age was not significant in any of its forms with MG
+
+```{r}
+SE_S_Age <-lm(SE_S ~ Age, data = FullData)
+SE_S_stdres <- rstandard(SE_S_Age)
+DataRes3 <- cbind(DataRes3,SE_S_stdres)
+```
+
+
+#TV on Age
+
+```{r}
+TV_Age <-lm(TV ~ Age, data = FullData)
+TV_stdres <- rstandard(TV_Age)
+DataRes3 <- cbind(DataRes3,TV_stdres)
+```
+
+
+#MG_P on Age
+
+```{r}
+MG_P_Age <-lm(MG_P ~ Age, data = FullData)
+MG_P_stdres <- rstandard(MG_P_Age)
+DataRes3 <- cbind(DataRes3,MG_P_stdres)
+```
+
 
 
