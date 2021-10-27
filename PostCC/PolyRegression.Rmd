@@ -27,8 +27,8 @@ DataRes3 <- cbind(DataRes3,PostScore_stdres)
 
 ```{r}
 PreScore_Age <-lm(PreScore ~ Age, data = FullData)
-PostScore_stdres <- rstandard(PostScore_Age)
-DataRes3 <- cbind(DataRes3,PostScore_stdres)
+PreScore_stdres <- rstandard(PreScore_Age)
+DataRes3 <- cbind(DataRes3,PreScore_stdres)
 ```
 
 
