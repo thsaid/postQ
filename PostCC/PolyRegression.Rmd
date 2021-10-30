@@ -79,7 +79,7 @@ The testing showed very minor differences across the residuals
 I am using this command to compare it with the poly command above
 
 #FM on Age 
-cubic relation seemed signficant 
+cubic relation seemed significant than other models  
 ```{r}
 FM_Age3<- lm(FM_EFF_Z ~ Age.cubed, data = FullData)
 ```
@@ -104,6 +104,17 @@ DataRes3 <- cbind(DataRes3,CB_stdres)
 
 #SS on Age
 Polynomial regression indicated significant linear relation with age 
+
+```{r}
+SS_Age <- lm(SS_EFF_Z ~ Age, data = FullData)
+```
+
+```{r}
+SS_stdres <- rstandard(SS_Age)
+DataRes3 <- cbind(DataRes3,SS_stdres)
+```
+
+#SS on age showed to be a quadratic function instead
 
 ```{r}
 SS_Age <- lm(SS_EFF_Z ~ Age, data = FullData)
