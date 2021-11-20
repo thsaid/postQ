@@ -1,0 +1,204 @@
+---
+title: "LCM"
+author: "Tamer Said"
+date: "20/11/2021"
+output: html_document
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+install.packages("lcsm")
+```
+
+Using lavaan
+
+```{r}
+library(lavaan)
+```
+
+LCM.model1 \<- 'B0 =\~ 1*verbal0 + 1*verbal1 + 1*verbal3 + 1*verbal5 \> B1 =\~ 0*verbal0 + 1*verbal1 + 3*verbal3 + 5*verbal5 verbal0 \~\~ label("Ve")*verbal0 \> verbal1 \~\~ equal("Ve")*verbal1 \> verbal3 \~\~ equal("Ve")\*verbal3
+
+```{r}
+LCM.model1 <-  'B0 =~ 1*PreScore_stdres + 1*PostScore 
+B1 =~ 0*PreScore_stdres + 1*PostScore 
+PreScore_stdres ~~ label(Pre)*PreScore_stdres
+PostScore  ~~ equal(Post)*PostScore '
+LCM.fit <- growth(LCM.model1, data=FullDataRes_3010)
+summary(LCM.fit, fit.measure=TRUE)
+```
+
+```{r}
+library(lcsm)
+```
+
+Trial model
+
+```{r}
+install.packages("devtools") #uncomment if you need devtools
+library(devtools)
+install_github("doomlab/learnSEM")2
+learnr::run_tutorial("lgm", "learnSEM")
+```
+
+MODEL 1 from Baujann
+
+```{r}
+LCMmodel1 = '
+i =~ 1*PreScore_stdres + 1*PostScore_stdres #set path coefficient to 1 we are forcing it to give an average score
+
+i~~0*i #setting variance to zero, everyone has the same avg. score (silly assumption )
+
+# residual variances
+PreScore_stdres ~~ r*PreScore_stdres
+PostScore_stdres ~~ r*PostScore_stdres'
+
+#set residual variance equal to each other the variance is the same
+
+LCM1.fit <- growth(LCMmodel1, data  = FullDataRes_3010, sample.nobs = 255)
+summary(LCM1.fit, fit.measure=TRUE)
+```
+
+As expected the model is awful due to the restrictions we made
+
+\#Model 2: Intercept mean and variance allow the variance of the intercept to vary (random effects model) In this model intercept \~\~ 0 is revmoed
+
+```{r}
+LCMmodel2 = '
+i =~ 1*PreScore_stdres + 1*PostScore_stdres #set path coefficient to 1 we are forcing it to give an average score
+
+
+# residual variances
+PreScore_stdres ~~ r*PreScore_stdres
+PostScore_stdres ~~ r*PostScore_stdres'
+
+#set residual variance equal to each other the variance is the same
+
+LCM2.fit <- growth(LCMmodel2, data  = FullDataRes_3010, sample.nobs = 255)
+summary(LCM2.fit, fit.measure=TRUE)
+```
+
+As we add parameters, the residuals will decrease residual variance = 0.45
+
+i = 0 (mean)
+
+\#Model 3: WIll introduce the slope, no slope average allow the variance of the intercept to vary (random effects model) In this model intercept \~\~ 0 is revmoed
+
+```{r}
+LCMmodel3 = '
+i =~ 1*PreScore_stdres + 1*PostScore_stdres #set path coefficient to 1 we are forcing it to give an average score
+
+s=~ 0*PreScore_stdres + 1*PostScore_stdres #every participant follow the same pattern, the first one is zero. At time 1 there is no slop, that is the intercept
+s~0*1 #slope will not allowed to vary
+s~~0*i #implies that the varaince between slope and intercept,  slope and intercept are independent
+# residual variances
+PreScore_stdres ~~ r*PreScore_stdres
+PostScore_stdres ~~ r*PostScore_stdres'
+
+#set residual variance equal to each other the variance is the same
+
+LCM3.fit <- growth(LCMmodel3, data  = FullDataRes_3010, sample.nobs = 255)
+summary(LCM3.fit, fit.measure=TRUE)
+```
+
+model 2 is very close to model 3..
+
+\#Model 4: Average slope variance and covariance )no restircstions to average slope
+
+```{r}
+LCMmodel4 = '
+i =~ 1*PreScore_stdres + 1*PostScore_stdres #set path coefficient to 1 we are forcing it to give an average score
+
+s=~ 0*PreScore_stdres + 1*PostScore_stdres #every participant follow the same pattern, the first one is zero. At time 1 there is no slop, that is the intercept
+
+# residual variances
+PreScore_stdres ~~ r*PreScore_stdres
+PostScore_stdres ~~ r*PostScore_stdres'
+
+#set residual variance equal to each other the variance is the same
+
+LCM4.fit <- growth(LCMmodel4, data  = FullDataRes_3010, sample.nobs = 255)
+summary(LCM4.fit, fit.measure=TRUE)
+```
+
+slope mean = 0 slope variance is -0.125, covariance between itnercept & slope = 0.06 (not signficant)
+
+As the intercept increases, the slope also increases which means that there is interaction.. those who start higher, their slope gets higher.
+
+```{r}
+LCMmodel4.1 = '
+i =~ 1*PreScore + 1*PostScore #set path coefficient to 1 we are forcing it to give an average score
+
+s=~ 0*PreScore + 1*PostScore #every participant follow the same pattern, the first one is zero. At time 1 there is no slop, that is the intercept
+
+# residual variances
+PreScore ~~ r*PreScore
+PostScore ~~ r*PostScore'
+
+#set residual variance equal to each other the variance is the same
+
+LCM4.1.fit <- growth(LCMmodel4.1, data  = FullDataRes_3010, sample.nobs = 255)
+summary(LCM4.1.fit, fit.measure=TRUE, standardized = T)
+```
+
+LCM Model 5: Uncostrained model . allowind the resisudlas to vary freely.
+
+```{r}
+LCMmodel5 = '
+i =~ 1*PreScore + 1*PostScore #set path coefficient to 1 we are forcing it to give an average score
+
+s=~ 0*PreScore + 1*PostScore #every participant follow the same pattern, the first one is zero. At time 1 there is no slop, that is the intercept'
+
+#set residual variance equal to each other the variance is the same
+
+LCM5.fit <- growth(LCMmodel5, data  = FullDataRes_3010, sample.nobs = 255)
+summary(LCM5.fit, fit.measure=TRUE, standardized = T)
+```
+
+error variance decrease by time
+
+The intercept is 8.98, intercept variance is 4.8, and the slope is -0.06
+
+The pre score variance = 0.69, and post = 0.073.
+
+In the final model, I would like to add the rest of the data and set the change as the predictor
+
+\# equal residual variances
+
+PreScore \~\~ r\*PreScore
+
+PostScore \~\~ r\*PostScore
+
+```{r}
+LCMmodel6 = '
+i =~ 1*PreScore+ 1*PostScore #set path coefficient to 1 we are forcing it to give an average score
+
+s=~ 0*PreScore + 1*PostScore #every participant follow the same pattern, the first one is zero. At time 1 there is no slop, that is the intercept
+
+PreScore ~~ r*PreScore
+
+PostScore ~~ r*PostScore
+
+#Measruement model 
+
+PG =~ PAV_stdres  + PAp_stdres
+SALES =~ MG_S_stdres + TV_stdres + SE_S_stdres
+PALS =~ MG_P_stdres +SE_P_stdres
+EF =~FM_stdres +SS_stdres2 +CB_stdres
+
+#Structural model 
+
+s ~  EF + PG + PALS + SALES + PreScore #S is the slope and I am testing if any of the latents are predicting this change 
+
+i ~  EF + PG + PALS + SALES 
+'
+
+SEMfit6<- sem(LCMmodel6, data = FullData_Z, se = "robust",   test = "Satorra-Bentler", meanstructure = TRUE)
+summary(SEMfit6, rsq = TRUE, standardized = TRUE, fit = TRUE)
+fitmeasures(SEMfit6)
+varTable(SEMfit6)
+
+```
