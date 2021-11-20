@@ -194,3 +194,23 @@ DataRes3 <- cbind(DataRes3,PAp_stdres)
 write.csv(DataRes3, "FullDataRes_2510.csv")
 ```
 
+```{r}
+write.csv(FullData_Z, "FullDataRes_2610.csv")
+```
+
+#Residualizng post score on pre score
+
+```{r}
+Post_adj <-lm(PostScore ~ PreScore + Age , data = FullData)
+Gain_stdres <- rstandard(Post_adj)
+FullData_Z2011 <- cbind(FullData_Z,Gain_stdres)
+```
+
+```{r}
+FullData_Z <- FullData_Z2011
+```
+
+```{r}
+write.csv(FullData_Z2011, "FullDataRes_2011.csv")
+```
+
